@@ -24,7 +24,9 @@ python3 scripts/install.py --codex-home "${CODEX_HOME:-$HOME/.codex}"
 ```
 
 Dry-run is the default and is byte-for-byte non-mutating. Inspect every target
-printed by the command before applying.
+printed by the command before applying. The installer rejects the filesystem
+root and the user's home directory as `--codex-home`; use a dedicated Codex
+home directory.
 
 ## Apply installation
 
@@ -55,4 +57,3 @@ The installer deliberately has no automatic uninstall command. Review the
 installed target list and restore the relevant files from the timestamped
 backup. If no prior target existed, remove only the exact files installed by
 this repository. Never recursively delete an entire Codex home.
-

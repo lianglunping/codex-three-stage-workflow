@@ -138,6 +138,11 @@ class InstallerTests(unittest.TestCase):
             self.assertIn("MISSING_SOURCE", result.stderr)
             self.assertFalse(home.exists())
 
+    def test_filesystem_root_is_rejected_as_codex_home(self):
+        result = run_installer("--codex-home", str(Path("/")))
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("UNSAFE_CODEX_HOME", result.stderr)
+
 
 if __name__ == "__main__":
     unittest.main()

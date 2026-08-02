@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import hashlib
 import os
 import subprocess
 import sys
@@ -90,6 +91,22 @@ class PublicReleaseAuditTests(unittest.TestCase):
             self.assertNotEqual(result.returncode, 0)
             self.assertIn("MISSING_LICENSE", result.stderr)
             self.assertIn("MISSING_VERSION", result.stderr)
+
+    def test_duplicate_manifest_path_is_rejected(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            minimal_release(root)
+            license_hash = hashlib.sha256((root / "LICENSE").read_bytes()).hexdigest()
+            version_hash = hashlib.sha256((root / "VERSION").read_bytes()).hexdigest()
+            (root / "MANIFEST.sha256").write_text(
+                f"{license_hash}  LICENSE\n"
+                f"{license_hash}  LICENSE\n"
+                f"{version_hash}  VERSION\n",
+                encoding="utf-8",
+            )
+            result = run_audit(root)
+            self.assertNotEqual(result.returncode, 0)
+            self.assertIn("DUPLICATE_MANIFEST_PATH", result.stderr)
 
     def test_current_repository_passes_public_boundary_audit(self):
         result = run_audit(ROOT)

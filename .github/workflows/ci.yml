@@ -24,4 +24,3 @@ jobs:
         run: python3 scripts/audit_public_release.py .
       - name: Validate workflow suite
         run: python3 scripts/validate_all.py
-

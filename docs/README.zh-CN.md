@@ -44,4 +44,3 @@ python3 scripts/install.py --codex-home "${CODEX_HOME:-$HOME/.codex}" --apply
 
 详细说明见 [安装](installation.md)、[架构](architecture.md) 和
 [安全边界](security-boundary.md)。
-

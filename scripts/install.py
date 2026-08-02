@@ -79,6 +79,9 @@ def atomic_copy(source: Path, target: Path) -> None:
 def main() -> int:
     args = parse_args()
     codex_home = args.codex_home.expanduser().resolve()
+    if codex_home == Path(codex_home.anchor) or codex_home == Path.home().resolve():
+        print("UNSAFE_CODEX_HOME", file=sys.stderr)
+        return 2
     manifest = source_manifest()
     missing = validate_sources(manifest)
     if missing:
@@ -122,4 +125,3 @@ def main() -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
-

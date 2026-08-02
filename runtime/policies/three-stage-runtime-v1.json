@@ -13,4 +13,3 @@
   ],
   "limitations": "The hook evaluates declared tool payloads only, fails open on internal errors, and can be disabled by an explicit sentinel. It is defense in depth, not an OS security boundary."
 }
-

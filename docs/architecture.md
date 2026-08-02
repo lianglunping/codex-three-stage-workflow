@@ -49,4 +49,3 @@ An audit receipt binds the exact revision id, manifest hash, scope fingerprint,
 cutoff, auditor assignment, report hash, findings hash, verdict, and gate
 statuses. A receipt for another revision is never treated as approval of the
 current revision.
-

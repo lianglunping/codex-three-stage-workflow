@@ -26,4 +26,3 @@ Official Codex references:
 - [Hooks](https://developers.openai.com/codex/hooks)
 - [Subagents and custom agents](https://developers.openai.com/codex/subagents)
 - [Configuration reference](https://developers.openai.com/codex/config-reference)
-

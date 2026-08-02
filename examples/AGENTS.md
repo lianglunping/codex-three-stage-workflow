@@ -15,4 +15,3 @@
 - 审计只接受绑定当前 sealed revision、manifest、scope 和 cutoff 的 receipt。
 
 简单问答、只读状态核查、常规监控和小型明确修改不强制进入三阶段流程。
-

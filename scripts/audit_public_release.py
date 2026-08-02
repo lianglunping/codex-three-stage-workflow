@@ -101,6 +101,8 @@ def verify_manifest(root: Path) -> List[Finding]:
         parts = line.split("  ", 1)
         if len(parts) != 2 or not re.fullmatch(r"[a-f0-9]{64}", parts[0]):
             return [Finding("INVALID_MANIFEST", "MANIFEST.sha256", number)]
+        if parts[1] in expected:
+            return [Finding("DUPLICATE_MANIFEST_PATH", "MANIFEST.sha256", number)]
         expected[parts[1]] = parts[0]
     actual = {
         str(item.relative_to(root)): hashlib.sha256(item.read_bytes()).hexdigest()
@@ -141,4 +143,3 @@ def main() -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
-

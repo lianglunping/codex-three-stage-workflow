@@ -18,4 +18,3 @@ The included hook is defense in depth. It evaluates declared hook payloads,
 fails open on internal exceptions, and has an explicit disable sentinel. It is
 not an operating-system sandbox or a replacement for Codex permissions,
 repository review, and least-privilege configuration.
-

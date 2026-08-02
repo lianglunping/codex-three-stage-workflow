@@ -1,10 +1,8 @@
-# Staged Agent Run Protocol v0.1
+# Staged Agent Run Protocol v0.1 (Legacy Schema Reference)
 
-作者：梁博 / GPT-5.5 Pro 修改稿  
-日期：2026-05-12  
-协议名：`staged_agent_run_protocol`  
-版本：`0.1.0`  
-默认 profile：`standard`  
+协议名：`staged_agent_run_protocol`
+版本：`0.1.0`
+默认 profile：`standard`
 目的：为复杂科研、生信、分子育种、诱变育种和可复现数据分析任务建立一套可审计、可接续、可复现的 Agent 执行协议。
 
 ---
@@ -1437,4 +1435,3 @@ checksums.tsv
 checksum 是什么？
 别人如何复现？
 ```
-

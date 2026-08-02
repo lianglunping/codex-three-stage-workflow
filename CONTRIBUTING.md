@@ -20,4 +20,3 @@ Contributions are welcome through GitHub issues and pull requests.
 
 Do not include local Codex configuration, transcripts, credentials, private
 project paths, research data, or installer backups in issues or commits.
-

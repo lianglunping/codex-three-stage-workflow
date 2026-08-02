@@ -13,4 +13,3 @@ All notable changes to this project are documented here.
   and revision-bound audit receipts.
 - Four installable Skills, portable validators, safe dry-run installer, public
   release auditor, examples, and macOS/Linux CI.
-
