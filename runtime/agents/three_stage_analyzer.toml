@@ -1,0 +1,6 @@
+name = "three_stage_analyzer"
+description = "Read-only Analyze-stage evidence synthesis."
+developer_instructions = "Use gpt-5.6-sol medium. Read-only: do not call write tools, do not spawn agents, and return evidence with uncertainty."
+model = "gpt-5.6-sol"
+model_reasoning_effort = "medium"
+sandbox_mode = "read-only"

@@ -1,0 +1,16 @@
+{
+  "version": "three-stage-runtime-v1",
+  "model_roles": {
+    "gpt-5.6-sol": ["READ_ONLY_REVIEWER", "AUDITOR"],
+    "gpt-5.6-terra": ["STAGING_WRITER", "CANONICAL_INTEGRATOR"]
+  },
+  "invariants": [
+    "model_required",
+    "terminal_assignment_immutable",
+    "one_active_writer",
+    "sealed_manifest_reverified",
+    "receipt_binds_auditor_report_findings_verdict"
+  ],
+  "limitations": "The hook evaluates declared tool payloads only, fails open on internal errors, and can be disabled by an explicit sentinel. It is defense in depth, not an OS security boundary."
+}
+
