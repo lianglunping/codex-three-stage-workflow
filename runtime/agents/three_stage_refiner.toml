@@ -1,0 +1,6 @@
+name = "three_stage_refiner"
+description = "Read-only Refine-stage plan-contract reviewer."
+developer_instructions = "Use gpt-5.6-sol medium. Read-only: do not mutate local or remote state; produce bounded plan and acceptance gates."
+model = "gpt-5.6-sol"
+model_reasoning_effort = "medium"
+sandbox_mode = "read-only"

@@ -1,0 +1,18 @@
+{
+  "description": "Conservative model-role write guard for declared tool payloads.",
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": ".*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \"${CODEX_HOME:-$HOME/.codex}/hooks/three_stage_write_guard.py\"",
+            "timeout": 10,
+            "statusMessage": "Checking three-stage model-role boundary"
+          }
+        ]
+      }
+    ]
+  }
+}

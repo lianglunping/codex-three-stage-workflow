@@ -1,0 +1,4 @@
+interface:
+  display_name: "三阶段复杂任务工作流"
+  short_description: "复杂任务的阶段识别、审批续接、范围控制与质量验证工作流"
+  default_prompt: "Use $three-stage-complex-workflow to classify the current task, restore any approval state, and enforce Analyze, Refine, or Execute."

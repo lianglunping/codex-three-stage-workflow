@@ -1,0 +1,4 @@
+interface:
+  display_name: "Staged Approved-Plan Runner"
+  short_description: "Execute approved research plans with auditable QC gates."
+  default_prompt: "Use $staged-agent-run-protocol to execute the approved plan at the provided path with registered scope, provenance, QC gates, and frozen outputs."
