@@ -12,10 +12,13 @@ flowchart LR
     U --> B[Revision-bound audit receipt]
 ```
 
-The three-stage Skill owns task identity, approval, scope, and transitions.
+An explicit Skill invocation or verifiable active run is the activation boundary.
+The three-stage Skill owns task identity, approval, scope, and transitions only
+inside that boundary; ordinary tasks retain normal model and tool access.
 Supporting Skills own execution records, parallel-assignment safety, and audit
-method. The JSON policy provides a shared machine-readable role contract. The
-hook is an additional declared-payload check, not the source of user authority.
+method. The JSON policy provides a shared machine-readable role contract only
+for `explicit_skill_or_active_run`. The optional strict hook is an additional
+declared-payload check for a dedicated session, not the source of user authority.
 
 ## Preventing planning loops
 

@@ -94,7 +94,7 @@ def main() -> int:
     for _, relative in manifest:
         print(f"{mode} {relative}")
     print(f"MANUAL_MERGE {REPO_ROOT / 'examples' / 'config.toml'}")
-    print(f"MANUAL_MERGE {REPO_ROOT / 'examples' / 'hooks.json'}")
+    print(f"OPTIONAL_STRICT_HOOK {REPO_ROOT / 'examples' / 'hooks.strict.json'}")
     print(f"MANUAL_MERGE {REPO_ROOT / 'examples' / 'AGENTS.md'}")
     if not args.apply:
         return 0

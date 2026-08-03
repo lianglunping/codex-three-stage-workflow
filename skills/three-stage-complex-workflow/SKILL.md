@@ -1,11 +1,9 @@
 ---
 name: three-stage-complex-workflow
 description: >-
-  Use when work is PLAN_REQUIRED, spans multiple files or components, changes an
-  architecture or public contract, is conclusion-sensitive or hard to reverse,
-  has substantive competing approaches, resumes an approved complex plan, or is
-  explicitly invoked. Do not use for simple Q&A, routine status checks, small
-  unambiguous edits, or observation of an already-running job.
+  Use when the user explicitly invokes $three-stage-complex-workflow or resumes
+  a verifiable active three-stage task. Do not use merely because work is
+  technical, multi-file, PLAN_REQUIRED, or otherwise complex.
 ---
 
 # Three-Stage Complex Workflow
@@ -19,25 +17,21 @@ Classify the current request before acting:
 
 - `SIMPLE`: use the ordinary `READ_ONLY`, `DIAGNOSE`, `DIRECT_CHANGE`, or
   `MONITOR` route.
-- `COMPLEX_NEW`: enter `ANALYZE`.
+- `EXPLICIT_NEW`: enter `ANALYZE` only after an explicit
+  `$three-stage-complex-workflow` invocation.
 - `RESUME_APPROVED`: reconstruct approval evidence and resume the matching
-  stage without repeating completed approvals.
+  stage only when an active three-stage task is verifiable.
 
-Treat a task as complex when one or more of these materially applies:
-
-- multiple files, modules, systems, hosts, or execution stages;
-- architecture, shared interfaces, schemas, data models, or release contracts;
-- scientific assumptions or design choices that can change conclusions;
-- destructive, difficult-to-reverse, externally visible, costly, or new
-  long-running actions;
-- two or more genuinely different approaches with meaningful tradeoffs;
-- explicit invocation of `$three-stage-complex-workflow`.
-
-Do not inflate a task merely because it is technical. A bounded, reversible edit
-with an obvious implementation remains `DIRECT_CHANGE`. A complex read-only
-audit or diagnosis may stop after Analyze and does not authorize a fix. Ongoing
-observation, failure classification, or bounded recovery of an already-running
-job belongs to `job-monitor-loop`, not a fresh three-stage cycle.
+For a new task, enter this Skill only when the user explicitly invokes
+`$three-stage-complex-workflow`. Resume across turns only when the recorded
+`task_id` and `current_task_id` are both nonempty and match, `workflow_stage`
+is legal, and `run_status` is `ACTIVE`. Multi-file scope,
+`PLAN_REQUIRED`, architecture, research sensitivity, risk, or competing options
+can justify careful ordinary planning, but do not by themselves activate this
+Skill or impose Sol/Terra roles. Ordinary work uses the normal
+`READ_ONLY`/`DIAGNOSE`/`DIRECT_CHANGE`/`MONITOR` or specialist route, including
+ordinary reading, file generation, writes, and agent dispatch. Ongoing
+observation or bounded job recovery belongs to `job-monitor-loop`.
 
 ## Track Task-Scoped State
 
@@ -46,7 +40,9 @@ Track this minimum logical state in conversation or in an approved plan:
 ```text
 WorkflowState {
     task_id: string | null
+    current_task_id: string | null
     workflow_stage: ANALYZE | REFINE | EXECUTE
+    run_status: ACTIVE | CLOSED
     selected_option: string | null
     approved_scope: string | null
     approval_evidence: string | null
@@ -54,8 +50,15 @@ WorkflowState {
 }
 ```
 
-- Derive `task_id` from the current objective and deliverable; do not confuse an
-  unrelated new request with a follow-up to the active task.
+- `task_id` is the recorded workflow identity. Derive `current_task_id` from
+  the current objective and deliverable; do not confuse an unrelated new
+  request with a follow-up to the active task.
+- Resume only when both task IDs are nonempty and equal, `workflow_stage` is
+  one of `ANALYZE`, `REFINE`, or `EXECUTE`, and `run_status` is `ACTIVE`.
+  A closed, missing, mismatched, or malformed state routes as an ordinary or
+  applicable specialist task; it never auto-activates this Skill.
+- `NONE` is only a regression-input value representing no active state. It is
+  not a valid `WorkflowState.run_status` for an active three-stage task.
 - Summarize `approved_scope` with exact files, outputs, environment, safety
   boundaries, and exclusions when available.
 - Record `approval_evidence` as the user's unambiguous statement or an auditable
@@ -73,7 +76,7 @@ ordinary route without silently changing the complex task's state.
 ## Enforce Transitions
 
 ```text
-COMPLEX_NEW                                     -> ANALYZE
+EXPLICIT_NEW                                    -> ANALYZE
 ANALYZE + explicit option selection             -> REFINE
 REFINE + explicit implementation approval       -> EXECUTE
 approved plan + current execute request          -> EXECUTE
@@ -96,7 +99,10 @@ the approved scope.
 
 ## Route Models by Responsibility
 
-Model routing is a preferred capability assignment, not a source of authority:
+These model responsibilities apply only inside an explicit or active three-stage
+run; they are not global file, read, generation, write, or agent-dispatch
+permissions. Model routing is a preferred capability assignment, not a source
+of authority:
 
 | Stage | Preferred model | Allowed responsibility | Exit artifact |
 |---|---|---|---|
@@ -268,9 +274,13 @@ transitions; a specialist skill owns only its method inside the current stage.
 
 ## Validate the Contract
 
-Machine-enforced runtime policy is `<CODEX_HOME>/policies/three-stage-runtime-v1.json`.
-It supplements this Skill: Sol is read-only, Terra is the canonical
-Execute integrator, and the hook has only declared-payload coverage.
+Machine-readable runtime policy is
+`<CODEX_HOME>/policies/three-stage-runtime-v1.json`. Its activation is
+`explicit_skill_or_active_run`: inside that scope Sol must not hold canonical
+write permission and Terra is the canonical Execute integrator. It does not
+limit ordinary task file access or agent dispatch. The shipped hook is an
+optional strict, declared-payload component for a dedicated three-stage session;
+it is not enabled by default.
 
 After installing, changing, or auditing this skill, run the bundled read-only
 validator against the installed Skill, nearest global routing file, and curated

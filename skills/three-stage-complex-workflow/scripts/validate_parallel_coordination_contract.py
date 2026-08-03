@@ -70,11 +70,13 @@ def load_policy(path: pathlib.Path) -> tuple[dict[str, list[str]], list[str]]:
     except (OSError, UnicodeError, json.JSONDecodeError) as exc:
         return {}, [f"cannot parse policy {path}: {exc}"]
     errors: list[str] = []
-    if not isinstance(policy, dict) or set(policy) != {"version", "model_roles", "invariants", "limitations"}:
-        return {}, ["invalid policy schema: expected version, model_roles, invariants, limitations"]
+    if not isinstance(policy, dict) or set(policy) != {"version", "activation", "model_roles", "invariants", "limitations"}:
+        return {}, ["invalid policy schema: expected version, activation, model_roles, invariants, limitations"]
     model_roles = policy["model_roles"]
     if not isinstance(policy["version"], str) or not policy["version"]:
         errors.append("invalid policy schema: version must be a nonempty string")
+    if policy.get("activation") != "explicit_skill_or_active_run":
+        errors.append("invalid policy schema: activation must be explicit_skill_or_active_run")
     if not isinstance(model_roles, dict) or not model_roles:
         errors.append("invalid policy schema: model_roles must be a nonempty object")
     elif any(not isinstance(model, str) or not model or not isinstance(roles, list) or not roles or any(not isinstance(role, str) or not role for role in roles) for model, roles in model_roles.items()):

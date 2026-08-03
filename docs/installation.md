@@ -41,15 +41,24 @@ agent definitions. Existing target files are first copied into a timestamped
 backup below the selected Codex home. The installer never edits `config.toml`
 or `hooks.json`.
 
-Review and manually merge:
+Review and manually merge only the ordinary configuration snippets:
 
 - `examples/config.toml`
-- `examples/hooks.json`
 - `examples/AGENTS.md`
 
-After enabling the hook, use `/hooks` in Codex CLI to review and trust the exact
-definition. Codex records hook trust against its hash, so a changed hook must be
-reviewed again.
+Do not enable a global three-stage write guard. If an explicitly activated,
+dedicated strict session needs defense in depth, review and manually opt into
+`examples/hooks.strict.json`. It allows a Sol-to-Terra handoff but rejects other
+strict-mode Sol mutation or spawn attempts. After enabling it, use `/hooks` in
+Codex CLI to review and trust the exact definition. Codex records hook trust
+against its hash, so a changed hook must be reviewed again.
+
+## Upgrade from v0.1.0
+
+Remove only the former `three_stage_write_guard.py` `PreToolUse` block that was
+manually added to your user `hooks.json`; retain every other hook. Keep the
+installed script because it is still the optional strict-session component.
+Fully restart Codex and start a new session to reload the hook list.
 
 ## Uninstall or rollback
 

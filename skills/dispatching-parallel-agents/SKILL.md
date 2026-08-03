@@ -17,8 +17,11 @@ sequentially.
 
 ## Mandatory No-Overlap Preflight
 
-Apply `<CODEX_HOME>/policies/three-stage-runtime-v1.json` when it
-exists. Its current conservative runtime mode permits at most one active writer.
+For an explicit or active three-stage run, apply
+`<CODEX_HOME>/policies/three-stage-runtime-v1.json`; its
+`explicit_skill_or_active_run` mode permits at most one active writer. Outside
+that run, this Skill still prevents overlapping canonical writes but does not
+assign global Sol/Terra file permissions.
 
 Before dispatching, inspect the current unique deliverable, authoritative TODO,
 valid completion evidence, and running assignments. Stop a later assignment
@@ -49,10 +52,10 @@ Use exactly one role:
 | `CANONICAL_INTEGRATOR` | root only; canonical paths |
 | `AUDITOR` | none; reads a sealed revision |
 
-`gpt-5.6-sol` is appropriate for read-only analysis or plan refinement and must
-never receive canonical write authority. `gpt-5.6-terra` is preferred for
-execution assignments. Model identity never overrides role, scope, stage, or
-user authority.
+Within an explicit or active three-stage run, `gpt-5.6-sol` is appropriate for
+read-only analysis or plan refinement and must never receive canonical write
+authority. `gpt-5.6-terra` is preferred for execution assignments. Model
+identity never overrides role, scope, stage, or user authority.
 
 Reject the assignment before dispatch when:
 

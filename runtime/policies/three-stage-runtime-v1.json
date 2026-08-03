@@ -1,5 +1,6 @@
 {
   "version": "three-stage-runtime-v1",
+  "activation": "explicit_skill_or_active_run",
   "model_roles": {
     "gpt-5.6-sol": ["READ_ONLY_REVIEWER", "AUDITOR"],
     "gpt-5.6-terra": ["STAGING_WRITER", "CANONICAL_INTEGRATOR"]

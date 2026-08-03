@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Conservative PreToolUse guard for declared Codex hook payloads."""
+"""Optional strict PreToolUse guard for a dedicated three-stage session."""
 
 from __future__ import annotations
 
@@ -13,6 +13,7 @@ from typing import Optional
 POLICY_NAME = "three-stage-runtime-v1.json"
 DISABLE_NAME = "three_stage_write_guard.disabled"
 WRITE_TOOLS = {"apply_patch", "Write", "Edit", "MultiEdit", "NotebookEdit"}
+AGENT_SPAWN_TOOLS = {"agent", "spawn_agent", "collaborationspawn_agent"}
 MUTATION = (
     "apply_patch",
     ">",
@@ -93,10 +94,13 @@ def decision(payload: dict) -> Optional[str]:
         or named_mutation
         or (tool == "Bash" and any(token in command for token in MUTATION))
     )
-    if (tool == "Agent" or "spawn_agent" in lowered) and model == "gpt-5.6-sol":
-        return "Sol cannot spawn agents"
     if mutates and model != "gpt-5.6-terra":
         return "only Terra may perform declared mutations"
+    if lowered in AGENT_SPAWN_TOOLS and model == "gpt-5.6-sol":
+        handoff_model = str((payload.get("tool_input") or {}).get("model", ""))
+        if handoff_model == "gpt-5.6-terra":
+            return None
+        return "Sol may only hand off to Terra"
     return None
 
 

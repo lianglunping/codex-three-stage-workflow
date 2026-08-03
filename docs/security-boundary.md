@@ -1,11 +1,14 @@
 # Security Boundary
 
-The runtime hook is a conservative `PreToolUse` guard. It reads the declared
+The runtime hook is an optional strict `PreToolUse` guard for a dedicated,
+explicitly activated three-stage session. It reads the declared
 tool name, model slug, and tool input supplied by Codex and emits only a short
 reason code when it denies an action.
 
-It can block declared mutations by Sol or unknown models and can block Sol from
-declared agent-spawn calls. It cannot:
+It can block declared mutations by Sol or unknown models. It permits an explicit
+Sol-to-Terra handoff and rejects other strict-mode Sol agent-spawn calls. It is
+not enabled by default and must not be used as a global restriction on ordinary
+task reads, file generation, writes, or agent dispatch. It cannot:
 
 - prove that the declared model identity is authentic;
 - parse every possible shell mutation or indirect side effect;

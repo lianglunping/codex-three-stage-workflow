@@ -19,6 +19,11 @@ status values in English.
 
 ## Execution Boundary
 
+- Apply this protocol to an approved research plan that needs auditable run
+  control, including ordinary approved research execution and an explicitly
+  invoked or verifiably active three-stage run. It does not itself constrain
+  ordinary task reads, file generation, writes, or agent dispatch.
+- Sol/Terra model roles apply only within an explicit or active three-stage run.
 - Consume an approved plan; do not recreate, debate, or materially redesign it.
 - Bootstrap a run directory only to establish control records, not to reopen
   scientific planning.
@@ -92,10 +97,12 @@ rendered HTML page as the only state record.
 
 ## Model and Coordination Contract
 
-Load `<CODEX_HOME>/policies/three-stage-runtime-v1.json` as the
-machine-readable complement to this contract. Every assignment requires an
-allowed model, terminal assignments cannot reopen, and current runtime policy
-permits at most one active writer.
+Within an explicit or active three-stage run, load
+`<CODEX_HOME>/policies/three-stage-runtime-v1.json` as the machine-readable
+complement to this contract. Its `explicit_skill_or_active_run` activation means
+every assignment requires an allowed model, terminal assignments cannot reopen,
+and current runtime policy permits at most one active writer. It is not a
+global model permission rule.
 
 Prefer `gpt-5.6-sol` for Analyze/Refine read-only synthesis and bounded plan
 refinement. Prefer `gpt-5.6-terra` for Execute implementation. Model selection

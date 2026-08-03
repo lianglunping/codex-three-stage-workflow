@@ -1,20 +1,25 @@
-case_id	task_kind	explicit_invocation	prior_stage	selected_option	approval_evidence	material_drift	requested_action	expected_route	expected_stage	expected_specialist	expected_model	expected_model_role
-simple_qa	simple_qa	false	NONE	none	none	false	answer	ordinary	NONE	none	runtime-default	ORDINARY
-small_direct_change	small_direct_change	false	NONE	none	none	false	edit	ordinary	NONE	none	runtime-default	ORDINARY
-explicit_simple_request	simple_qa	true	NONE	none	none	false	analyze	three-stage	ANALYZE	none	gpt-5.6-sol	READ_ONLY_PLANNER
-complex_multifile	complex_multifile	false	NONE	none	none	false	analyze	three-stage	ANALYZE	none	gpt-5.6-sol	READ_ONLY_PLANNER
-complex_readonly_diagnosis	complex_diagnosis	false	NONE	none	none	false	analyze	three-stage	ANALYZE	none	gpt-5.6-sol	READ_ONLY_PLANNER
-selected_option	complex_multifile	false	ANALYZE	option-1	none	false	refine	three-stage	REFINE	none	gpt-5.6-sol	PLAN_REFINER
-approved_refine	complex_multifile	false	REFINE	option-1	approved	false	execute	three-stage	EXECUTE	none	gpt-5.6-terra	EXECUTION_WORKER
-approved_plan_new_session	complex_multifile	false	NONE	option-1	approved	false	resume	three-stage	EXECUTE	none	gpt-5.6-terra	EXECUTION_WORKER
-material_scope_drift	complex_multifile	false	EXECUTE	option-1	approved	true	continue	three-stage	AFFECTED_PLANNING_STAGE	none	gpt-5.6-sol	PLAN_REFINER
-routine_monitor	routine_monitor	false	NONE	none	none	false	monitor	specialist	NONE	job-monitor-loop	runtime-default	ORDINARY
-long_running_design	long_running_design	false	NONE	none	none	false	design	three-stage	ANALYZE	none	gpt-5.6-sol	READ_ONLY_PLANNER
-complex_coding_pro	complex_coding_pro	false	NONE	none	none	false	analyze	three-stage	ANALYZE	orchestrate-chatgpt-pro-development	gpt-5.6-sol	READ_ONLY_PLANNER
-scientific_planning	scientific_planning	false	NONE	none	none	false	analyze	three-stage	ANALYZE	multi-agent-bioinformatics-planner	gpt-5.6-sol	READ_ONLY_PLANNER
-approved_research_execution	approved_research_execution	false	REFINE	plan-a	approved	false	execute	three-stage	EXECUTE	staged-agent-run-protocol	gpt-5.6-terra	EXECUTION_WORKER
-implementation_planning	implementation_planning	false	ANALYZE	option-1	none	false	refine	three-stage	REFINE	writing-plans	gpt-5.6-sol	PLAN_REFINER
-approved_software_execution	approved_software_execution	false	REFINE	plan-a	approved	false	execute	three-stage	EXECUTE	executing-plans	gpt-5.6-terra	EXECUTION_WORKER
-runtime_policy_execute	complex_multifile	false	REFINE	policy-a	approved	false	execute	three-stage	EXECUTE	none	gpt-5.6-terra	EXECUTION_WORKER
-runtime_policy_sol_refine	complex_multifile	false	ANALYZE	policy-a	none	false	refine	three-stage	REFINE	none	gpt-5.6-sol	PLAN_REFINER
-policy_alias_readonly	complex_multifile	true	NONE	none	none	false	analyze	three-stage	ANALYZE	none	gpt-5.6-sol	READ_ONLY_PLANNER
+case_id	task_kind	explicit_invocation	prior_stage	workflow_task_id	current_task_id	run_status	selected_option	approval_evidence	material_drift	requested_action	expected_route	expected_stage	expected_specialist	expected_model	expected_model_role
+simple_qa	simple_qa	false	NONE	none	none	NONE	none	none	false	answer	ordinary	NONE	none	runtime-default	ORDINARY
+small_direct_change	small_direct_change	false	NONE	none	none	NONE	none	none	false	edit	ordinary	NONE	none	runtime-default	ORDINARY
+explicit_simple_request	simple_qa	true	NONE	none	none	NONE	none	none	false	analyze	three-stage	ANALYZE	none	gpt-5.6-sol	READ_ONLY_PLANNER
+ordinary_multifile	complex_multifile	false	NONE	none	none	NONE	none	none	false	analyze	ordinary	NONE	none	runtime-default	ORDINARY
+ordinary_readonly_diagnosis	complex_diagnosis	false	NONE	none	none	NONE	none	none	false	analyze	ordinary	NONE	none	runtime-default	ORDINARY
+ordinary_file_generation	file_generation	false	NONE	none	none	NONE	none	none	false	write	ordinary	NONE	none	runtime-default	ORDINARY
+selected_option_active_run	complex_multifile	false	ANALYZE	task-selected	task-selected	ACTIVE	option-1	none	false	refine	three-stage	REFINE	none	gpt-5.6-sol	PLAN_REFINER
+approved_refine_active_run	complex_multifile	false	REFINE	task-approved	task-approved	ACTIVE	option-1	approved	false	execute	three-stage	EXECUTE	none	gpt-5.6-terra	EXECUTION_WORKER
+approved_plan_active_run	complex_multifile	false	REFINE	task-resume	task-resume	ACTIVE	option-1	approved	false	resume	three-stage	EXECUTE	none	gpt-5.6-terra	EXECUTION_WORKER
+material_scope_drift	complex_multifile	false	EXECUTE	task-drift	task-drift	ACTIVE	option-1	approved	true	continue	three-stage	AFFECTED_PLANNING_STAGE	none	gpt-5.6-sol	PLAN_REFINER
+closed_three_stage_run	complex_multifile	false	EXECUTE	task-closed	task-closed	CLOSED	option-1	approved	false	continue	ordinary	NONE	none	runtime-default	ORDINARY
+missing_workflow_task_id	complex_multifile	false	ANALYZE	none	task-current	ACTIVE	none	none	false	refine	ordinary	NONE	none	runtime-default	ORDINARY
+missing_current_task_id	complex_multifile	false	ANALYZE	task-workflow	none	ACTIVE	none	none	false	refine	ordinary	NONE	none	runtime-default	ORDINARY
+mismatched_active_task_specialist	routine_monitor	false	ANALYZE	task-workflow	task-current	ACTIVE	none	none	false	monitor	specialist	NONE	job-monitor-loop	runtime-default	ORDINARY
+routine_monitor	routine_monitor	false	NONE	none	none	NONE	none	none	false	monitor	specialist	NONE	job-monitor-loop	runtime-default	ORDINARY
+ordinary_long_running_design	long_running_design	false	NONE	none	none	NONE	none	none	false	design	ordinary	NONE	none	runtime-default	ORDINARY
+complex_coding_pro	complex_coding_pro	false	NONE	none	none	NONE	none	none	false	analyze	specialist	NONE	orchestrate-chatgpt-pro-development	runtime-default	ORDINARY
+scientific_planning	scientific_planning	false	NONE	none	none	NONE	none	none	false	analyze	specialist	NONE	multi-agent-bioinformatics-planner	runtime-default	ORDINARY
+approved_research_execution	approved_research_execution	false	NONE	none	none	NONE	plan-a	approved	false	execute	specialist	NONE	staged-agent-run-protocol	runtime-default	ORDINARY
+implementation_planning	implementation_planning	false	ANALYZE	task-implementation	task-implementation	ACTIVE	option-1	none	false	refine	three-stage	REFINE	writing-plans	gpt-5.6-sol	PLAN_REFINER
+approved_software_execution	approved_software_execution	false	REFINE	task-software	task-software	ACTIVE	plan-a	approved	false	execute	three-stage	EXECUTE	executing-plans	gpt-5.6-terra	EXECUTION_WORKER
+runtime_policy_execute	complex_multifile	false	REFINE	task-policy-execute	task-policy-execute	ACTIVE	policy-a	approved	false	execute	three-stage	EXECUTE	none	gpt-5.6-terra	EXECUTION_WORKER
+runtime_policy_sol_refine	complex_multifile	false	ANALYZE	task-policy-refine	task-policy-refine	ACTIVE	policy-a	none	false	refine	three-stage	REFINE	none	gpt-5.6-sol	PLAN_REFINER
+policy_alias_readonly	complex_multifile	true	NONE	none	none	NONE	none	none	false	analyze	three-stage	ANALYZE	none	gpt-5.6-sol	READ_ONLY_PLANNER

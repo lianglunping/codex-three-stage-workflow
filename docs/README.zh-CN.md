@@ -6,7 +6,8 @@
 
 ## 核心设计
 
-- `gpt-5.6-sol` 只承担 Analyze、Refine 和 Audit 的只读职责；
+- 只有显式 `$three-stage-complex-workflow` 或续接可核验的活动任务才激活本工作流；普通任务保留正常的读文件、生成文件、写文件和派生代理能力。
+- 在活动三阶段任务内，`gpt-5.6-sol` 只承担 Analyze、Refine 和 Audit 的只读职责；
   `gpt-5.6-terra` 承担受批准范围约束的执行与集成。
 - Analyze/Refine 使用 `StageExitContract`、有限证据轮次和 issue fingerprint
   终止无新增证据的反复检查。
@@ -29,11 +30,18 @@ python3 scripts/install.py --codex-home "${CODEX_HOME:-$HOME/.codex}" --apply
 ```
 
 第一条安装命令只是 dry-run，不产生写入；只有 `--apply` 才会安装。安装器不会
-修改 `config.toml` 或 `hooks.json`，请人工审阅并合并 `examples/` 中的片段。
+修改 `config.toml` 或 `hooks.json`，也不建议合并全局写入 Guard。
+`examples/hooks.strict.json` 仅供显式启动的专用严格三阶段会话人工审阅和选择。
 已有目标会备份到 Codex home 内部的版本化 backup 目录。
 
-完成 Hook 合并后，在 Codex CLI 使用 `/hooks` 审阅并信任其当前哈希。Hook
+若选择启用严格 Hook，在 Codex CLI 使用 `/hooks` 审阅并信任其当前哈希。Hook
 变更后需要重新审阅。
+
+## 从 v0.1.0 升级
+
+如曾手工将旧的 `three_stage_write_guard.py` `PreToolUse` block 合并到用户
+`hooks.json`，只删除该 block，保留其他所有 Hook。不要删除已安装脚本：它仍是
+可选严格会话组件。必须完全重启 Codex 并开启新会话，才能重新加载 Hook 列表。
 
 ## 支持范围
 

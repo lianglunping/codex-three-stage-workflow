@@ -16,6 +16,9 @@ REQUIRED_COLUMNS = [
     "task_kind",
     "explicit_invocation",
     "prior_stage",
+    "workflow_task_id",
+    "current_task_id",
+    "run_status",
     "selected_option",
     "approval_evidence",
     "material_drift",
@@ -41,6 +44,8 @@ ROLE_ALIASES = {
     "PLAN_REFINER": "READ_ONLY_REVIEWER",
     "EXECUTION_WORKER": "STAGING_WRITER",
 }
+PRIOR_STAGES = {"NONE", "ANALYZE", "REFINE", "EXECUTE"}
+RUN_STATUSES = {"NONE", "ACTIVE", "CLOSED"}
 
 
 def parse_args() -> argparse.Namespace:
@@ -66,12 +71,14 @@ def load_policy(path: pathlib.Path) -> tuple[Dict[str, List[str]], List[str]]:
         policy = json.loads(path.read_text(encoding="utf-8"))
     except (OSError, UnicodeError, json.JSONDecodeError) as exc:
         return {}, [f"cannot parse policy {path}: {exc}"]
-    if not isinstance(policy, dict) or set(policy) != {"version", "model_roles", "invariants", "limitations"}:
-        errors.append("invalid policy schema: expected version, model_roles, invariants, limitations")
+    if not isinstance(policy, dict) or set(policy) != {"version", "activation", "model_roles", "invariants", "limitations"}:
+        errors.append("invalid policy schema: expected version, activation, model_roles, invariants, limitations")
         return {}, errors
     model_roles = policy["model_roles"]
     if not isinstance(policy["version"], str) or not policy["version"]:
         errors.append("invalid policy schema: version must be a nonempty string")
+    if policy.get("activation") != "explicit_skill_or_active_run":
+        errors.append("invalid policy schema: activation must be explicit_skill_or_active_run")
     if not isinstance(model_roles, dict) or not model_roles:
         errors.append("invalid policy schema: model_roles must be a nonempty object")
     elif any(not isinstance(model, str) or not model or not isinstance(roles, list) or not roles or any(not isinstance(role, str) or not role for role in roles) for model, roles in model_roles.items()):
@@ -123,7 +130,9 @@ def validate_content(skill_text: str, agents_text: str, ui_text: str) -> List[st
     required_skill_tokens = [
         "$three-stage-complex-workflow",
         "task_id: string | null",
+        "current_task_id: string | null",
         "workflow_stage: ANALYZE | REFINE | EXECUTE",
+        "run_status: ACTIVE | CLOSED",
         "selected_option: string | null",
         "approved_scope: string | null",
         "approval_evidence: string | null",
@@ -158,6 +167,8 @@ def validate_content(skill_text: str, agents_text: str, ui_text: str) -> List[st
         "【细化方案】",
         "【执行方案】",
         "task_id",
+        "current_task_id",
+        "状态为 `ACTIVE`",
         "approval_evidence",
         "scope_fingerprint",
         "专用 Skill 不得绕过三阶段批准边界",
@@ -180,20 +191,51 @@ def parse_bool(value: str, case_id: str) -> bool:
     raise ValueError(f"{case_id}: expected boolean, got {value!r}")
 
 
+def validate_active_run_enumerations(row: Dict[str, str]) -> None:
+    case_id = row["case_id"]
+    prior_stage = row["prior_stage"].strip()
+    run_status = row["run_status"].strip()
+    if prior_stage not in PRIOR_STAGES:
+        raise ValueError(
+            f"{case_id}: invalid prior_stage {prior_stage!r}; "
+            f"expected one of {sorted(PRIOR_STAGES)}"
+        )
+    if run_status not in RUN_STATUSES:
+        raise ValueError(
+            f"{case_id}: invalid run_status {run_status!r}; "
+            f"expected one of {sorted(RUN_STATUSES)}"
+        )
+
+
+def has_active_three_stage_run(row: Dict[str, str]) -> bool:
+    """Accept continuation only for a live run bound to this task identity."""
+    workflow_task_id = row["workflow_task_id"].strip()
+    current_task_id = row["current_task_id"].strip()
+    return (
+        row["prior_stage"].strip() != "NONE"
+        and workflow_task_id.lower() != "none"
+        and current_task_id.lower() != "none"
+        and bool(workflow_task_id)
+        and workflow_task_id == current_task_id
+        and row["run_status"].strip() == "ACTIVE"
+    )
+
+
 def resolve_case(row: Dict[str, str]) -> Tuple[str, str, str, str, str]:
     case_id = row["case_id"]
     explicit = parse_bool(row["explicit_invocation"], case_id)
     drift = parse_bool(row["material_drift"], case_id)
     task_kind = row["task_kind"]
 
-    if explicit:
+    active_run = has_active_three_stage_run(row)
+    if explicit or active_run:
         route = "three-stage"
     elif task_kind == "routine_monitor":
         route = "specialist"
-    elif task_kind in {"simple_qa", "small_direct_change"}:
-        route = "ordinary"
+    elif task_kind in SPECIALISTS:
+        route = "specialist"
     else:
-        route = "three-stage"
+        route = "ordinary"
 
     if route != "three-stage":
         stage = "NONE"
@@ -246,6 +288,7 @@ def validate_cases(path: pathlib.Path, model_roles: Dict[str, List[str]]) -> Tup
             continue
         seen.add(case_id)
         try:
+            validate_active_run_enumerations(row)
             actual = resolve_case(row)
         except ValueError as exc:
             input_failures.append(str(exc))

@@ -9,12 +9,15 @@ revision-bound audit receipts.
 
 ## Why this exists
 
-Strong planning models can keep expanding details after a decision is ready.
+When explicitly selected, strong planning models can keep expanding details after a decision is ready.
 Parallel agents can also collide on shared files or trigger repeated work when
 content hashes, mtimes, or audit cutoffs change. This suite makes both failure
 modes explicit and testable:
 
-- Sol is assigned read-only Analyze, Refine, and Audit roles. Stage-exit
+- An explicit `$three-stage-complex-workflow` invocation, or a verifiable active
+  run, activates the three-stage contract. Ordinary tasks keep normal model and
+  tool access, including file reads, generation, writes, and agent dispatch.
+- Inside an active three-stage run, Sol is assigned read-only Analyze, Refine, and Audit roles. Stage-exit
   contracts and repeated-issue fingerprints stop evidence-free planning loops.
 - Terra performs approved Execute work. Writers stage privately; only the root
   integrator changes canonical files, using base-revision and hash checks.
@@ -37,7 +40,7 @@ flowchart LR
 - `staged-agent-run-protocol`: provenance, staging, CAS, seals, and receipts
 - `dispatching-parallel-agents`: assignment and no-overlap rules
 - `project-audit`: evidence-based pre-release and scientific audit gates
-- portable JSON policy, custom agent examples, and `PreToolUse` guard
+- portable JSON policy, custom agent examples, and an optional strict `PreToolUse` guard
 - dry-run installer, public-boundary auditor, unit tests, and contract validators
 
 ## Quick start
@@ -56,9 +59,18 @@ python3 scripts/install.py --codex-home "${CODEX_HOME:-$HOME/.codex}"
 python3 scripts/install.py --codex-home "${CODEX_HOME:-$HOME/.codex}" --apply
 ```
 
-The installer never edits `config.toml` or `hooks.json`. Review and manually
-merge the snippets under `examples/`. After enabling a hook, use `/hooks` in
-Codex CLI to inspect and trust its exact definition.
+The installer never edits `config.toml` or `hooks.json`. It does not recommend a
+global write guard. `examples/hooks.strict.json` is an optional dedicated-session
+example for an explicitly activated three-stage run; after enabling it, use
+`/hooks` in Codex CLI to inspect and trust its exact definition.
+
+### Upgrade from v0.1.0
+
+If you manually merged the former global `three_stage_write_guard.py`
+`PreToolUse` block into your own `hooks.json`, remove that block only; preserve
+all other hooks. Do not delete the installed script: it remains the optional
+strict-session component. Fully restart Codex and begin a new session so the
+hook list is reloaded.
 
 ## Compatibility
 
@@ -72,9 +84,10 @@ against the actual Codex runtime before their roles are added.
 
 ## Security boundary
 
-The hook evaluates declared Codex payload fields and emits redacted reason
-codes. It fails open on internal errors and has an explicit disable sentinel.
-It is defense in depth, not an OS security boundary. Keep Codex sandboxing,
+The optional strict hook evaluates declared Codex payload fields and emits
+redacted reason codes. It fails open on internal errors and has an explicit
+disable sentinel. It is defense in depth for a dedicated three-stage session,
+not an OS security boundary or global model restriction. Keep Codex sandboxing,
 approval policy, repository permissions, and human review enabled.
 
 This repository contains only public, sanitized examples. The installer does

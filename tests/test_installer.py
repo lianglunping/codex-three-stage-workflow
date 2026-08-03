@@ -44,6 +44,14 @@ class InstallerTests(unittest.TestCase):
             self.assertEqual(digest_tree(home), before)
             self.assertIn("DRY_RUN", result.stdout)
 
+    def test_dry_run_describes_strict_hook_as_optional(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            home = Path(tmp) / "codex-home"
+            result = run_installer("--codex-home", str(home))
+            self.assertEqual(result.returncode, 0, result.stderr)
+            self.assertIn("OPTIONAL_STRICT_HOOK", result.stdout)
+            self.assertNotIn("MANUAL_MERGE " + str(ROOT / "examples" / "hooks.json"), result.stdout)
+
     def test_apply_installs_exact_public_targets(self):
         with tempfile.TemporaryDirectory() as tmp:
             home = Path(tmp) / "codex-home"
