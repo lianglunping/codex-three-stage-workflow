@@ -2,21 +2,6 @@
 
 All notable changes to this project are documented here.
 
-## [Unreleased]
-
-### Changed
-
-- Three-stage routing is now activated only by an explicit
-  `$three-stage-complex-workflow` invocation or a verifiable active run; ordinary
-  tasks retain normal file and agent-dispatch access.
-- The Sol/Terra role policy is scoped to active three-stage runs. The declared
-  payload write guard is optional strict-session defense in depth, is no longer
-  recommended as a global hook, and permits Sol-to-Terra handoff.
-- v0.1.0 upgraders must remove only the manually merged global Guard
-  `PreToolUse` block from their user `hooks.json`, preserve other hooks, and
-  restart Codex before opening a new session. The installed script remains the
-  optional strict-session component.
-
 ## [0.2.0] - 2026-11-05
 
 ### Changed
