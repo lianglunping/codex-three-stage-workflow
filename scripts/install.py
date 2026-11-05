@@ -22,7 +22,6 @@ SKILLS = (
 )
 RUNTIME_FILES = (
     ("runtime/policies/three-stage-runtime-v1.json", "policies/three-stage-runtime-v1.json"),
-    ("runtime/hooks/three_stage_write_guard.py", "hooks/three_stage_write_guard.py"),
     ("runtime/agents/three_stage_analyzer.toml", "agents/three_stage_analyzer.toml"),
     ("runtime/agents/three_stage_refiner.toml", "agents/three_stage_refiner.toml"),
     ("runtime/agents/revision_auditor.toml", "agents/revision_auditor.toml"),
@@ -94,7 +93,6 @@ def main() -> int:
     for _, relative in manifest:
         print(f"{mode} {relative}")
     print(f"MANUAL_MERGE {REPO_ROOT / 'examples' / 'config.toml'}")
-    print(f"OPTIONAL_STRICT_HOOK {REPO_ROOT / 'examples' / 'hooks.strict.json'}")
     print(f"MANUAL_MERGE {REPO_ROOT / 'examples' / 'AGENTS.md'}")
     if not args.apply:
         return 0

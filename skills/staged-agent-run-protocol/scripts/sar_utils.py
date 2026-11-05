@@ -186,9 +186,46 @@ AUDIT_RECEIPT_HEADER = [
 ]
 
 
-def validate_model_for_role(model: str, role: str) -> bool:
-    """Conservative model/role compatibility; model never grants authority."""
+def validate_model_for_role(model: str, role: str, runtime_evidence=None,
+                            capability_evidence=None) -> bool:
+    """Dynamic evidence takes precedence; no evidence preserves legacy checks."""
+    if runtime_evidence is not None or capability_evidence is not None:
+        # Resolve the sibling skill rather than a global policy-dependent import.
+        from importlib.util import spec_from_file_location, module_from_spec
+        path = Path(__file__).resolve().parents[2] / "three-stage-complex-workflow/scripts/model_routing.py"
+        spec = spec_from_file_location("three_stage_model_routing", path)
+        module = module_from_spec(spec)
+        spec.loader.exec_module(module)
+        return module.model_supports_role(model, role, runtime_evidence, capability_evidence)
     return bool(model and role in runtime_policy().get("model_roles", {}).get(model, []))
+
+
+def validate_assignment_model(assignment: dict) -> bool:
+    """Recheck registered dynamic evidence, retaining legacy static semantics."""
+    notes = assignment.get("notes", "")
+    if "model_evidence=" not in notes:
+        return validate_model_for_role(assignment.get("model", ""), assignment.get("role", ""))
+    try:
+        evidence = json.loads(notes.rsplit("model_evidence=", 1)[1])
+        if evidence["stage"] not in {"ANALYZE", "REFINE", "EXECUTE"}:
+            return False
+        role = assignment.get("role", "")
+        if evidence["stage"] != "EXECUTE" and role not in {"READ_ONLY_REVIEWER", "AUDITOR"}:
+            return False
+        inputs = []
+        for key in ("runtime", "capabilities"):
+            raw = Path(evidence[key]["path"]).read_bytes()
+            if hashlib.sha256(raw).hexdigest() != evidence[key]["sha256"]:
+                return False
+            inputs.append(json.loads(raw))
+        if assignment.get("agent_path") not in {"root", "/root"}:
+            if (evidence["delegation_authorized"] is not True
+                    or not evidence["delegation_evidence"]
+                    or inputs[0].get("delegation_tool_available") is not True):
+                return False
+        return validate_model_for_role(assignment.get("model", ""), role, *inputs)
+    except (OSError, ValueError, KeyError, TypeError, AttributeError):
+        return False
 
 
 def ready_from_findings(findings: list[dict[str, str]], gates: dict[str, str]) -> bool:

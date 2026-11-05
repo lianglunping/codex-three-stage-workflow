@@ -44,13 +44,13 @@ class InstallerTests(unittest.TestCase):
             self.assertEqual(digest_tree(home), before)
             self.assertIn("DRY_RUN", result.stdout)
 
-    def test_dry_run_describes_strict_hook_as_optional(self):
+    def test_retired_guard_is_not_installed_or_enabled(self):
         with tempfile.TemporaryDirectory() as tmp:
             home = Path(tmp) / "codex-home"
-            result = run_installer("--codex-home", str(home))
+            result = run_installer("--codex-home", str(home), "--apply")
             self.assertEqual(result.returncode, 0, result.stderr)
-            self.assertIn("OPTIONAL_STRICT_HOOK", result.stdout)
-            self.assertNotIn("MANUAL_MERGE " + str(ROOT / "examples" / "hooks.json"), result.stdout)
+            self.assertFalse((home / "hooks/three_stage_write_guard.py").exists())
+            self.assertFalse((home / "hooks.json").exists())
 
     def test_apply_installs_exact_public_targets(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -62,7 +62,6 @@ class InstallerTests(unittest.TestCase):
                 "agents/revision_auditor.toml",
                 "agents/three_stage_analyzer.toml",
                 "agents/three_stage_refiner.toml",
-                "hooks/three_stage_write_guard.py",
                 "policies/three-stage-runtime-v1.json",
             }
             expected.update(

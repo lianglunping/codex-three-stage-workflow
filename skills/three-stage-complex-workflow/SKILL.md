@@ -1,328 +1,205 @@
 ---
 name: three-stage-complex-workflow
-description: >-
-  Use when the user explicitly invokes $three-stage-complex-workflow or resumes
-  a verifiable active three-stage task. Do not use merely because work is
-  technical, multi-file, PLAN_REQUIRED, or otherwise complex.
+description: "Requested three-stage tasks: compare three detailed alternatives, refine the selected plan, then execute with MANUAL approvals or explicit BOUNDED_AUTO authority."
 ---
 
 # Three-Stage Complex Workflow
 
-Govern stage, approval, and scope transitions. Let specialist skills own domain
-methods and execution mechanics.
+Use three decision boundaries to deliver an authorized result. Give the user
+three detailed, meaningfully different alternatives before selecting a plan.
+This skill governs task identity, scope, approval and completion; it does not
+require a fixed implementation recipe. Stage leads follow the model defaults below.
 
-## Route the Task
+## Activate only for the intended task
 
-Classify the current request before acting:
+- An explicit `$three-stage-complex-workflow` task starts in `MANUAL` unless
+  the user authorizes autonomous progression.
+- A concrete three-stage request with “自动完成”, “自动推进”, “全自主” or
+  equivalent language starts in `BOUNDED_AUTO`. For example:
+  `请你完善这个图,直到通过,自动完成3阶段工作流`.
+- Resume only a verifiable `ACTIVE` run with matching nonempty `task_id` and
+  `current_task_id`, valid stage and intact mode-specific authority.
+- Complexity, multiple files, an explanation of this workflow, or a request to
+  audit/edit the skill does not itself activate the state machine. A separate
+  applicable task authorization may explicitly select this workflow.
 
-- `SIMPLE`: use the ordinary `READ_ONLY`, `DIAGNOSE`, `DIRECT_CHANGE`, or
-  `MONITOR` route.
-- `EXPLICIT_NEW`: enter `ANALYZE` only after an explicit
-  `$three-stage-complex-workflow` invocation.
-- `RESUME_APPROVED`: reconstruct approval evidence and resume the matching
-  stage only when an active three-stage task is verifiable.
+Explicit opt-out and meta intent take precedence over token matches.
+Read requests for meaning; regression phrase matching is a diagnostic aid, not
+proof of user authorization. A closed run stays closed. A newly authorized
+follow-up can reuse relevant decisions and evidence in a new bounded record.
 
-For a new task, enter this Skill only when the user explicitly invokes
-`$three-stage-complex-workflow`. Resume across turns only when the recorded
-`task_id` and `current_task_id` are both nonempty and match, `workflow_stage`
-is legal, and `run_status` is `ACTIVE`. Multi-file scope,
-`PLAN_REQUIRED`, architecture, research sensitivity, risk, or competing options
-can justify careful ordinary planning, but do not by themselves activate this
-Skill or impose Sol/Terra roles. Ordinary work uses the normal
-`READ_ONLY`/`DIAGNOSE`/`DIRECT_CHANGE`/`MONITOR` or specialist route, including
-ordinary reading, file generation, writes, and agent dispatch. Ongoing
-observation or bounded job recovery belongs to `job-monitor-loop`.
+## Keep one authoritative record
 
-## Track Task-Scoped State
+Record the objective, task identity, stage, mode, selected option, exact change
+scope, user authorization, scope fingerprint, acceptance gates and repair budget.
+Use an existing task ledger when available. A short in-session task may keep
+these facts in the conversation; resumable or consequential work benefits from
+one task-owned state file. Do not create parallel copies of the same plan,
+approval and status solely to fill templates.
 
-Track this minimum logical state in conversation or in an approved plan:
+Read [the state contract](references/state-contract.md) when persisting,
+resuming, recovering or mechanically validating a run. It defines the fields,
+`AcceptanceGate`, `AutoTransitionReceipt`, and `StageExitContract`, including
+scope drift and receipt recovery. Missing authority is never inferred from a
+schema, a test result or the apparent usefulness of the next action.
 
-```text
-WorkflowState {
-    task_id: string | null
-    current_task_id: string | null
-    workflow_stage: ANALYZE | REFINE | EXECUTE
-    run_status: ACTIVE | CLOSED
-    selected_option: string | null
-    approved_scope: string | null
-    approval_evidence: string | null
-    scope_fingerprint: string | null
-}
-```
+## Route the actual stage lead
 
-- `task_id` is the recorded workflow identity. Derive `current_task_id` from
-  the current objective and deliverable; do not confuse an unrelated new
-  request with a follow-up to the active task.
-- Resume only when both task IDs are nonempty and equal, `workflow_stage` is
-  one of `ANALYZE`, `REFINE`, or `EXECUTE`, and `run_status` is `ACTIVE`.
-  A closed, missing, mismatched, or malformed state routes as an ordinary or
-  applicable specialist task; it never auto-activates this Skill.
-- `NONE` is only a regression-input value representing no active state. It is
-  not a valid `WorkflowState.run_status` for an active three-stage task.
-- Summarize `approved_scope` with exact files, outputs, environment, safety
-  boundaries, and exclusions when available.
-- Record `approval_evidence` as the user's unambiguous statement or an auditable
-  approved-plan reference. Never invent approval.
-- Use `scope_fingerprint` as a canonical summary or digest of the approved files,
-  outputs, environment, risks, and authority. It need not be cryptographic or
-  written to disk.
-- Reconstruct missing state from conversation, plans, status files, and current
-  user intent. Ask only when a missing fact would change authority or validity.
+For new runs, default ANALYZE (investigation and design) and REFINE to
+`gpt-6-astra`; default EXECUTE to `gpt-6.1-sol`. Explicit user model instructions
+with recorded evidence override these preferences. Read
+`three-stage-runtime-v1.json` and use `scripts/model_routing.py`; new records
+require `workflow_policy_version: "2.1.0"` and `model_routing`.
 
-If the user replaces the objective, classify a new task. If the user asks an
-unrelated simple question while a complex task exists, answer it through the
-ordinary route without silently changing the complex task's state.
+Root coordination is distinct from the stage lead. Observe the actual root
+model; never claim that policy text switches it. When the selected model differs,
+use an authorized available delegation tool and record the actual stage lead.
+Without delegation authority, a supported model, task capability evidence or
+verified identity, pause with the specific missing requirement; never silently
+fall back. Existing records without routing/version markers keep legacy semantics.
 
-## Enforce Transitions
+Subagent models have no fixed allowlist: select full model IDs from current
+runtime availability and a separate task capability assessment. Static
+`model_roles` only supports legacy/current-root compatibility. A model name or
+runtime tool listing grants no role, stage, write scope or delegation authority.
+ANALYZE and REFINE stay read-only. Root is the sole canonical integrator, with at
+most one active writer. Automatic stage progression does not authorize subagents
+or delegation. Use [the composition contract](references/composition-contract.md)
+for evidence schemas, actual handoff and specialist methods.
 
-```text
-EXPLICIT_NEW                                    -> ANALYZE
-ANALYZE + explicit option selection             -> REFINE
-REFINE + explicit implementation approval       -> EXECUTE
-approved plan + current execute request          -> EXECUTE
-material scope, risk, input, or authority drift  -> affected planning stage
-```
+## Analyze — make the decision ready
 
-Start every user-visible response for the active complex task with exactly one
-current marker: `【分析问题】`, `【细化方案】`, or `【执行方案】`. Keep progress
-updates in the same stage. Complete no more than one stage in one assistant turn.
+Begin with `【分析问题】`. Establish the requested outcome, current evidence,
+inputs, host/project, constraints and observable acceptance criteria. Read enough
+context to distinguish the cause from the symptom and identify consequential
+unknowns. Do not mutate implementation files or install dependencies.
 
-Accept statements such as “用方案1”, “就这么做”, “按这个计划”, or “执行” as
-approval only when their target is unambiguous. Accept an approved plan whose
-scope matches observed state. Do not demand duplicate approval because a new
-conversation began.
+Read [stage-deliverables.md](references/stage-deliverables.md) for the required
+analysis and refinement detail. Present **exactly three numbered alternatives**
+with concrete mechanisms, affected files/components, benefits, drawbacks,
+complexity, performance, scalability, invasiveness, maintenance cost, validation
+and fit. Give a full explanation of each, then a comparison table and a reasoned
+recommendation. Names, scores or a terse table alone do not support selection.
+Do not fabricate feasibility, measured gains or superficial alternatives; label
+conditional or rejected paths honestly. Reuse verified context, but complete
+this comparison when a new decision is requested. An already selected, unchanged
+plan can resume its recorded stage without reopening the same decision.
 
-Return only the affected part to planning when new evidence materially changes
-the selected design, files, outputs, environment, risk, or required authority.
-Do not reset the workflow for a local implementation failure that remains inside
-the approved scope.
+Ask only about missing facts that change the decision or authority. Continue
+independent useful work while awaiting an answer. End planning when the decision
+is supported; additional investigation needs a named uncertainty that could
+change the next action, rather than a fixed number of research passes.
 
-## Route Models by Responsibility
+Exit with the selected recommendation, remaining limits and enough evidence to
+refine. `MANUAL` waits for the user's selection. `BOUNDED_AUTO` records
+`AUTO_REFINE` within its authority envelope and continues.
 
-These model responsibilities apply only inside an explicit or active three-stage
-run; they are not global file, read, generation, write, or agent-dispatch
-permissions. Model routing is a preferred capability assignment, not a source
-of authority:
+## Refine — make execution reviewable
 
-| Stage | Preferred model | Allowed responsibility | Exit artifact |
-|---|---|---|---|
-| `ANALYZE` | `gpt-5.6-sol` | read-only evidence synthesis and option comparison | decision-ready analysis |
-| `REFINE` | `gpt-5.6-sol` | bounded plan refinement | execution-ready file and gate contract |
-| `EXECUTE` | `gpt-5.6-terra` | implementation, tests, and repair inside approved scope | verified deliverables and receipts |
+Begin with `【细化方案】` only after mode-appropriate selection. List every planned
+new, changed or deleted file with its core change in pseudocode or detailed prose.
+Define changed function signatures, interfaces and data structures where applicable.
+Specify dependencies, sequencing, failure handling, backups, rollback and concrete
+test cases/acceptance. Name any task-owned temporary test directory and its cleanup
+plan. Use [stage-deliverables.md](references/stage-deliverables.md); a file list
+without per-file behavior is insufficient. Do not generate complete runnable code.
 
-If the preferred model is unavailable, keep the same responsibility boundary;
-never treat a fallback model as added authority. `gpt-5.6-sol` must not hold
-canonical write permission, act as `CANONICAL_INTEGRATOR`, or continue into
-execution because its plan appears obvious. In Execute, `gpt-5.6-terra` may
-write only within the approved assignment scope; the root integrator remains the
-only canonical writer when parallel agents are used.
+Keep implementation details flexible inside this contract. Record bounded
+assumptions, and classify discovered issues as in-scope blockers, non-blockers
+or out-of-scope findings. Reopen only decisions affected by material evidence.
+Do not write implementation code in Refine; an authorized task-owned planning
+record is permitted. Do not generate unneeded dashboards, reports or ledgers.
 
-## Stop Planning Loops
+Exit when files, authority and acceptance are ready. `MANUAL` waits for approval
+of this scope. `BOUNDED_AUTO` records `AUTO_EXECUTE` bound to the current scope.
+ANALYZE must not jump directly to EXECUTE. Existing valid approval is reused;
+internal receipt refresh or an unchanged plan does not require duplicate approval.
 
-Analyze and Refine are decision stages, not open-ended research loops. Use one
-broad evidence pass and at most one targeted gap-closing pass. A further pass is
-allowed only for a named blocking unknown whose answer can change the selected
-option, authority, or acceptance gate.
+## Execute — deliver the verified outcome
 
-Classify every newly discovered issue as `IN_SCOPE_BLOCKER`,
-`IN_SCOPE_NONBLOCKER`, or `OUT_OF_SCOPE`. Only `IN_SCOPE_BLOCKER` extends the
-current stage. Record non-blockers once and do not recursively expand them.
-When the same issue fingerprint recurs without new evidence, stop rechecking it
-and report the unresolved condition once.
+Begin with `【执行方案】`. Check current files, user edits, task identity and
+scope against the approved contract before material writes. Preserve originals,
+use recoverable changes and reuse the project's existing environment.
+Never install globally.
+For Python, use the designated isolated environment; if none exists, plan and
+create a project-local `venv` during Execute and use its interpreter or activate it
+for each shell session. For Node.js, check the package manager, manifest and lock
+file, then install missing declared dependencies in the approved project environment.
+Do not rebuild a working environment or change dependency versions merely because
+the stage began. Project execution, dependency, build and test commands belong in
+the designated environment; read-only host/environment discovery is permitted.
+Do not start a development server without a separate explicit user request.
 
-Before leaving Analyze or Refine, fill this logical exit contract:
+Implement coherent deliverables inside the approved scope. Choose effective
+local methods without expanding the goal. Report meaningful progress: what is
+known, what remains uncertain and what the next check resolves. Do not repeatedly
+dump state fields, complete plans or tool logs into the conversation.
 
-```text
-StageExitContract {
-    evidence_sufficiency: SUFFICIENT | INSUFFICIENT
-    blocking_unknowns: string[]
-    deliverable_complete: true | false
-    next_action: REQUEST_SELECTION | REQUEST_EXECUTION_APPROVAL | EXECUTE
-    stop_reason: string
-}
-```
+Run the checks relevant to changed behavior and required project acceptance.
+Discover established QA commands from applicable manifests, Makefile, CI or
+contribution docs: formatting/style, lint/static analysis, configured type checks,
+unit/integration tests and planned temporary checks. Run the applicable configured
+checks, report each result, and distinguish unconfigured checks from checks not run.
+Do not invent a new QA toolchain to fill a category.
+Reuse evidence only while its input versions, relevant files, environment and
+assumptions remain applicable. After changes, rerun affected checks. Inspect the
+actual final artifact; exports, process IDs or static checks alone do not prove
+scientific validity, correct rendering or successful publication.
 
-Exit the stage as soon as the deliverable is complete and no blocking unknown
-remains. Do not add details merely to consume context, reopen an already resolved
-choice, or self-approve the next stage.
+In MANUAL, a failed executed check pauses dependent execution for a failure report
+and the user's next decision; do not claim completion or submit failing code.
+In BOUNDED_AUTO, repair verified in-scope failures and preserve their evidence.
+A repair attempt
+counts after an attempted correction of a demonstrated problem, not initial
+implementation, routine validation or a progress update. Keep the same issue
+fingerprint across equivalent failures. New runs default to `RENEWABLE` repair
+budgets: three repairs for one issue or six in a cycle trigger a review and
+evidence-backed cycle renewal, rather than automatic termination of the task.
+Record diagnosis, the next approach and progress or new evidence before resetting
+cycle counters; lifetime totals and failure history never reset. Continue within
+unchanged authority until required acceptance passes, without a fixed renewal
+count ceiling. Stop identical retries that add no evidence or method, and respect
+actual resource limits and any smaller user-set fixed budget. Read
+[the repair policy](references/repair-policy.md) for counters and renewal receipts.
+Legacy records without an explicit repair mode retain `FIXED` limits; do not
+silently migrate active runs or reopen closed tasks.
+Scope drift returns only affected work to planning and requires refreshed scope
+and transition evidence before dependent writes.
 
-## Analyze
+Stop the affected action for missing authority, destructive/irreversible changes,
+raw-data or key-result overwrite, out-of-scope writes, credential/security or
+global-environment changes, scientific evidence conflict, unverifiable required
+acceptance, or model-role unavailability. Preserve completed work and report the
+specific evidence and smallest missing decision. Do not turn an optional check
+or an unrelated issue into a universal blocker.
 
-Begin with `【分析问题】`.
+Do not commit or push, send external messages, upload data, enable plugins,
+delegate, or expand environments merely because this workflow is active.
+Those actions need applicable independent task authority. Do not weaken a gate
+to obtain PASS. “直到通过” means the required gates are met within scope and
+budget, with evidence current for the delivered version.
 
-1. Establish the core objective, deliverable, scope, acceptance criteria, host,
-   project root, nearest instructions, environment, and safety boundary.
-2. Read relevant code, configuration, documentation, tests, logs, data contracts,
-   and prior plans with read-only tools.
-3. Distinguish root cause from symptoms and assess upstream, downstream, API,
-   data, release, and scientific-conclusion impacts.
-4. Classify missing information as blocking, important, or optional. Ask only
-   blocking questions; state bounded assumptions for the rest.
-5. Offer one to three substantively different solutions. Do not manufacture weak
-   alternatives to fill a quota.
-6. Compare correctness, evidence, complexity, performance, extensibility,
-   intrusion, rollback, maintenance, and technical debt. Prefer KISS and DRY
-   without sacrificing validity.
-7. Recommend one solution and request explicit selection.
+Before presenting a stage result, perform the applicable critical self-checks in
+`references/stage-deliverables.md`. Correct uncovered gaps or state the specific
+unresolved limitation; never invent certainty or record hidden chain-of-thought.
+In MANUAL, open each stage response with its marker, do only that stage, and wait
+for explicit selection/approval before the next response advances. A recommendation
+is not selection, and selection is not execution approval. In BOUNDED_AUTO, display
+each marker at stage entry and continue within the same task under its authority;
+still present the three alternatives and selected rationale before refining.
+Completion reports state the outcome,
+scope, meaningful checks and limitations; internal bookkeeping stays in the
+authoritative record. Create temporary tests only in an exclusive task-owned
+directory such as `temp_tests/<task_id>/`; after applicable checks pass, remove
+that directory and verify removal. Never delete a shared/pre-existing temp_tests
+directory, permanent regression tests or unrelated files. Preserve failure evidence
+and unfinished test material when checks fail. Close the run only when the required
+deliverable, applicable gates and planned cleanup are complete.
 
-Stop when the decision-ready analysis and `StageExitContract` are complete. Do
-not audit implementation details that cannot affect option selection.
+## Maintain this skill
 
-Do not modify files, install dependencies, run mutating commands, or implement a
-solution in Analyze.
-
-Before presenting the result, internally verify that the alternatives are not a
-literal restatement, the root cause is supported, the recommendation is not a
-shortcut, and the design is not over-engineered. Present concise evidence and
-decision rationale, not private chain-of-thought.
-
-## Refine
-
-Enter only after explicit selection. Begin with `【细化方案】`.
-
-1. List every file or artifact to add, modify, retire, or delete using exact
-   paths. Identify backups and rollback artifacts.
-2. Describe each file's responsibility and core change with pseudocode or
-   detailed prose.
-3. Define changed function signatures, class or command interfaces, schemas,
-   state values, and data structures. State explicitly when none change.
-4. Specify stage order, dependencies, error handling, edge cases, side effects,
-   and rollback conditions.
-5. Plan applicable formatting, linting, static analysis, type checks, unit and
-   integration tests, semantic QA, and artifact checks.
-6. Name any task-specific temporary test directory. Remove it only after all
-   planned checks pass; retain evidence and report if checks fail.
-7. Identify the highest-risk change and define its acceptance gate.
-8. Request explicit approval to execute.
-
-Stop when the file/interface/gate contract and `StageExitContract` are complete.
-Do not begin implementation, simulate implementation repeatedly, or refine the
-same accepted detail without new evidence.
-
-Do not write runnable implementation code or mutate project implementation files
-in Refine. Create a versioned planning or decision artifact only when explicitly
-authorized or the selected workflow already requires it.
-
-Before presenting the result, internally verify completeness, boundary and
-failure coverage, testability, rollback, and minimum intrusion.
-
-## Execute
-
-Enter only after explicit approval or valid approved-plan evidence. Begin with
-`【执行方案】`.
-
-1. Re-read the approved scope, nearest project rules, current files, locks, and
-   intervening changes. Recompute the scope fingerprint before material writes.
-   Inspect the current unique deliverable, authoritative task ledger, valid completion
-   evidence, and running assignments; stop a later overlapping path instead of
-   duplicating execution, review, build, or sign-off.
-2. Discover and reuse the project's existing environment mechanism: conda,
-   mamba, venv, uv, Poetry, containers, modules, or the package manager and lock
-   files already in use. Create, rebuild, install, or upgrade only when no
-   suitable environment exists and the approved scope authorizes it. Never
-   install globally.
-3. Back up unversioned persistent control files when rollback would otherwise be
-   difficult. Preserve unrelated user changes.
-4. Implement only the approved files and behavior. Apply YAGNI, KISS, and DRY.
-5. Place planned temporary validation code only in the named task-specific
-   temporary directory.
-6. Discover QA commands from configuration, CI, contribution guides, and
-   existing scripts. Run applicable format, lint, static, type, unit,
-   integration, semantic, manifest, checksum, and input-immutability checks.
-7. If a check fails, stop the affected delivery path, preserve evidence, report
-   the exact failure and impact, and repair only inside approved scope. Do not
-   claim completion while a required gate fails.
-8. Remove the task-specific temporary test directory only after all required
-   checks pass, then verify that it no longer exists.
-9. Report changed artifacts, checks and outcomes, residual risks, and any next
-   action.
-
-Use `gpt-5.6-terra` for scoped implementation work. If parallel agents are
-needed, apply the assignment, staging, single-integrator, revision-seal, and
-audit-receipt contract from `dispatching-parallel-agents` and
-`staged-agent-run-protocol`.
-
-Do not commit or push, start a development server, send external messages,
-upload sensitive data, or add out-of-scope features unless explicitly requested.
-
-Before reporting completion, internally verify readability, project consistency,
-absence of avoidable technical debt, environment cleanliness, and no silent
-regression in security, performance, accessibility, data integrity, or
-scientific claim strength.
-
-## Compose with Specialist Skills
-
-Apply this precedence: this skill owns stage, approval, task identity, and scope
-transitions; a specialist skill owns only its method inside the current stage.
-
-- Use `multi-agent-bioinformatics-planner` inside Analyze and Refine for
-  conclusion-sensitive scientific planning. It does not authorize execution.
-- Use `orchestrate-chatgpt-pro-development` inside the appropriate stage for
-  complex coding when it otherwise triggers. Its external proposal or generated
-  code does not count as user selection or approval.
-- Use `writing-plans` only as a Refine-stage plan format and `executing-plans`
-  only after entering Execute. Ignore any default commit, subagent, worktree, or
-  execution behavior that conflicts with user authority or higher-priority
-  instructions.
-- Use `staged-agent-run-protocol` inside Execute for an approved auditable
-  research run. It owns run control, provenance, host and environment registry,
-  QC gates, and frozen outputs.
-- Use `job-monitor-loop` for already-running job supervision and bounded
-  recovery. Monitoring authority does not authorize redesign.
-- Use `project-audit` for audit evidence and semantic acceptance. Audit remains
-  read-only unless the user also requests change.
-
-## Validate the Contract
-
-Machine-readable runtime policy is
-`<CODEX_HOME>/policies/three-stage-runtime-v1.json`. Its activation is
-`explicit_skill_or_active_run`: inside that scope Sol must not hold canonical
-write permission and Terra is the canonical Execute integrator. It does not
-limit ordinary task file access or agent dispatch. The shipped hook is an
-optional strict, declared-payload component for a dedicated three-stage session;
-it is not enabled by default.
-
-After installing, changing, or auditing this skill, run the bundled read-only
-validator against the installed Skill, nearest global routing file, and curated
-regression cases:
-
-```text
-python3 scripts/validate_workflow_contract.py \
-  --skill-root <skill-root> \
-  --agents <global-AGENTS.md> \
-  --cases <skill-root>/references/regression_cases.tsv
-```
-
-Also run the system `skill-creator` `quick_validate.py`. For a substantive
-revision, create task-owned temporary copies and confirm that removing a stage
-marker, drifting the global Skill name, introducing an unapproved transition, or
-removing the global-install prohibition produces a nonzero validator exit. Do
-not edit live files to perform negative tests.
-
-## Persist Decision Rationale
-
-When a reasoning summary exceeds 300 Chinese characters and will materially help
-future sessions, proactively propose a durable record using this exact sentence:
-
-```text
-This reasoning is valuable for future sessions. I'll write it to `[path]`.
-```
-
-Resolve destinations from the actual project root when applicable:
-
-- audit or review decision over 500 characters:
-  `plans/学位论文/audit_{topic}_{YYYYMMDD}.md`;
-- overturned conclusion or a conclusion changed over at least two rounds:
-  `{analysis_dir}/{topic}_evolution.md`;
-- quantitative literature-method analysis:
-  `{analysis_dir}/literature_{author}_{year}_analysis.md`;
-- A-versus-B decision rationale: use a task-owned project-local decision log
-  only when the approved scope includes it.
-
-If a listed directory is not part of the current project, propose a project-local
-equivalent instead of creating a foreign hierarchy. Record the question,
-evidence, decision, rejected alternatives, assumptions, and implications as a
-concise auditable rationale. Never record hidden chain-of-thought. The proposal
-alone does not authorize a write; write only after explicit approval or when the
-approved plan already includes that artifact. Do not duplicate a rationale
-already captured in an authoritative plan or rule.
+After changing this skill, run `python3 scripts/validate_bundle.py` from its
+directory or invoke that script by absolute path. Read
+[the validation guide](references/validation-guide.md) for real-state checks and
+their limits. Read [the persistence policy](references/persistence-policy.md)
+only when a durable decision record would help continuation.

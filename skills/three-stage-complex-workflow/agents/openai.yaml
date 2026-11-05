@@ -1,4 +1,4 @@
 interface:
   display_name: "三阶段复杂任务工作流"
-  short_description: "复杂任务的阶段识别、审批续接、范围控制与质量验证工作流"
-  default_prompt: "Use $three-stage-complex-workflow to classify the current task, restore any approval state, and enforce Analyze, Refine, or Execute."
+  short_description: "先详述三个差异化方案，再细化和执行；保留逐阶段审批与明确授权的自动模式"
+  default_prompt: "Use $three-stage-complex-workflow to present three detailed alternatives, refine the selected plan and execute under the mode I explicitly authorize. Default stage leads: gpt-6-astra for investigation/design/refinement, gpt-6.1-sol for execution; honor explicit user overrides and require independent runtime and task capability evidence for delegated models."

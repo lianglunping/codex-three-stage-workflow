@@ -1,31 +1,33 @@
 # Security Boundary
 
-The runtime hook is an optional strict `PreToolUse` guard for a dedicated,
-explicitly activated three-stage session. It reads the declared
-tool name, model slug, and tool input supplied by Codex and emits only a short
-reason code when it denies an action.
+The skills and validators govern declared task identity, stages, scope and
+acceptance. They do not authenticate user approval, model identity, capability
+evidence or the truth of a PASS string. They cannot discover every filesystem
+change or enforce an operating-system permission boundary.
 
-It can block declared mutations by Sol or unknown models. It permits an explicit
-Sol-to-Terra handoff and rejects other strict-mode Sol agent-spawn calls. It is
-not enabled by default and must not be used as a global restriction on ordinary
-task reads, file generation, writes, or agent dispatch. It cannot:
+- Inspect independent evidence before accepting state assertions.
+- Keep host permissions, repository access controls and human review in effect.
+- Model compatibility and available tools do not grant delegation or write authority.
+- Automatic progression does not authorize external sends, uploads, commits,
+  pushes, credential changes or global environment changes.
+- Required acceptance failures cannot be hidden by lowering a gate.
 
-- prove that the declared model identity is authentic;
-- parse every possible shell mutation or indirect side effect;
-- cover specialized tools that opt out of the normal hook path;
-- prevent writes after an internal hook exception, because it fails open;
-- replace Codex sandboxing, approval policy, repository permissions, or review.
+The former optional strict hook hardcoded Sol/Terra mutation rules. It is retired
+in 0.2.0 and no replacement enforcement hook is claimed. Remove only its old
+configuration entry if previously enabled; the installer never changes active
+hook configuration. Follow the [migration instructions](installation.md).
 
-Creating `<CODEX_HOME>/hooks/three_stage_write_guard.disabled` disables the
-guard. The exact command to create that sentinel is intentionally allowed so an
-operator can recover from a broken rule. Treat sentinel access as privileged
-and document its use.
+## Public export boundary
 
-Codex can load multiple matching hooks concurrently; this guard does not stop
-another hook from starting. Review all active hook sources with `/hooks`.
+Publish generic code, documentation and explicitly synthetic fixtures only.
+Do not copy personal AGENTS/configuration, sessions, credentials, local task
+state, research inputs/results, logs, receipts or backups. The included
+`audit_public_release.py` scans known secret/path patterns and checks every
+release-file hash against `MANIFEST.sha256`; pattern checks cannot establish
+that arbitrary content is free of private information. Review the exact diff
+and file inventory before publishing. Keep scan reports outside the repository.
 
-Official Codex references:
-
-- [Hooks](https://developers.openai.com/codex/hooks)
-- [Subagents and custom agents](https://developers.openai.com/codex/subagents)
-- [Configuration reference](https://developers.openai.com/codex/config-reference)
+`validate_all.py` installs into a disposable Codex home and uses repository
+examples. It does not read personal workflow configuration or research tasks.
+The installer copies only bundled components and backs up existing target files;
+it does not enable optional agents or modify active configuration.

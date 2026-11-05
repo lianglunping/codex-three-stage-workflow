@@ -67,6 +67,37 @@ def assignment(root: Path, assignment_id: str = "writer", status: str = "Running
 
 
 class ControlPlaneBehavior(unittest.TestCase):
+    def test_dynamic_auditor_evidence_survives_manifest_and_receipt_checks(self):
+        with tempfile.TemporaryDirectory() as raw:
+            root = Path(raw); write_state(root)
+            report, findings, fingerprint = sealed_audit_fixture(root)
+            (root / "coordination/agent_assignments.tsv").unlink()
+            runtime = root / "runtime.json"
+            capabilities = root / "capabilities.json"
+            runtime.write_text(json.dumps({"source": "TEST ONLY runtime observation",
+                "observed_at": "2026-11-05", "available_models": ["future-audit-model"],
+                "delegation_tool_available": True}), encoding="utf-8")
+            capabilities.write_text(json.dumps({"source": "TEST ONLY independent assessment",
+                "observed_at": "2026-11-05", "models": {"future-audit-model": ["audit"]}}), encoding="utf-8")
+            registered = run("register_agent_assignment.py", "--run-dir", root,
+                "--assignment-id", "auditor", "--agent-path", "/root/auditor",
+                "--role", "AUDITOR", "--model", "future-audit-model",
+                "--base-revision", "r0000", "--status", "Completed",
+                "--return-fingerprint", fingerprint, "--workflow-stage", "EXECUTE",
+                "--runtime-evidence", runtime, "--capability-evidence", capabilities,
+                "--delegation-authorized", "--delegation-evidence", "TEST ONLY user authorization")
+            self.assertEqual(registered.returncode, 0, registered.stdout + registered.stderr)
+            issued = run("audit_receipt.py", *issue_args(root, report, findings))
+            self.assertEqual(issued.returncode, 0, issued.stdout + issued.stderr)
+            checked = run("check_manifest.py", "--run-dir", root)
+            self.assertNotIn("assignment_invalid_model_role", checked.stdout + checked.stderr)
+            capabilities.write_text("{}", encoding="utf-8")
+            checked = run("check_manifest.py", "--run-dir", root)
+            self.assertIn("assignment_invalid_model_role", checked.stdout + checked.stderr)
+            rejected = run("audit_receipt.py", "validate", "--run-dir", root, "--receipt-id", "receipt")
+            self.assertNotEqual(rejected.returncode, 0)
+            self.assertIn("auditor_model_role_incompatible", rejected.stdout + rejected.stderr)
+
     def test_assignment_terra_running_and_second_writer_rejected(self):
         with tempfile.TemporaryDirectory() as raw:
             root = Path(raw); write_state(root)

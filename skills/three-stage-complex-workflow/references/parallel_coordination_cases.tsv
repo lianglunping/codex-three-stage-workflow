@@ -2,7 +2,7 @@ case_id	stage	model	agent_path	role	base_matches	write_scope	overlaps_active	act
 analyze_sol_readonly	ANALYZE	gpt-5.6-sol	/root/planner	READ_ONLY_REVIEWER	true	NONE	false	false	0	true	none	false	false	ALLOW_BOUNDED_PLANNING
 refine_sol_readonly	REFINE	gpt-5.6-sol	/root/refiner	READ_ONLY_REVIEWER	true	NONE	false	false	0	true	none	false	false	ALLOW_BOUNDED_PLANNING
 execute_terra_staging	EXECUTE	gpt-5.6-terra	/root/writer1	STAGING_WRITER	true	OWN_STAGING	false	false	0	true	none	false	false	ALLOW_STAGING_EXECUTION
-sol_canonical_forbidden	EXECUTE	gpt-5.6-sol	/root	CANONICAL_INTEGRATOR	true	CANONICAL	false	false	0	true	none	false	false	REJECT_MODEL_ROLE
+sol_canonical_allowed	EXECUTE	gpt-5.6-sol	/root	CANONICAL_INTEGRATOR	true	CANONICAL	false	false	0	true	none	false	false	ALLOW_CANONICAL_EXECUTION
 delegated_integrator_forbidden	EXECUTE	gpt-5.6-terra	/root/worker	CANONICAL_INTEGRATOR	true	CANONICAL	false	false	0	true	none	false	false	REJECT_NONROOT_INTEGRATOR
 reviewer_write_forbidden	ANALYZE	gpt-5.6-sol	/root/reviewer	READ_ONLY_REVIEWER	true	OWN_STAGING	false	false	0	true	none	false	false	REJECT_READONLY_WRITE
 auditor_write_forbidden	AUDIT	gpt-5.6-sol	/root/auditor	AUDITOR	true	OWN_STAGING	false	false	0	true	none	true	true	REJECT_READONLY_WRITE
@@ -20,7 +20,12 @@ audit_out_of_scope	AUDIT	gpt-5.6-sol	/root/auditor	AUDITOR	true	NONE	false	false
 audit_missing_receipt	AUDIT	gpt-5.6-sol	/root/auditor	AUDITOR	true	NONE	false	false	0	true	none	false	false	BLOCK_NO_RECEIPT
 second_active_writer	EXECUTE	gpt-5.6-terra	/root/writer5	STAGING_WRITER	true	OWN_STAGING	false	false	1	true	none	false	false	REJECT_SECOND_ACTIVE_WRITER
 stale_receipt	AUDIT	gpt-5.6-sol	/root/auditor	AUDITOR	true	NONE	false	false	0	true	none	true	false	REJECT_STALE_RECEIPT
-unregistered_model_auditor	AUDIT	future-model	/root/auditor	AUDITOR	true	NONE	false	false	0	true	none	true	true	REJECT_MODEL_ROLE
-sol_as_writer	EXECUTE	gpt-5.6-sol	/root/writer6	STAGING_WRITER	true	OWN_STAGING	false	false	0	true	none	false	false	REJECT_MODEL_ROLE
+luna_valid_auditor	AUDIT	gpt-5.6-luna	/root/auditor	AUDITOR	true	NONE	false	false	0	true	none	true	true	ACCEPT_RECEIPT
+sol_staging_allowed	EXECUTE	gpt-5.6-sol	/root/writer6	STAGING_WRITER	true	OWN_STAGING	false	false	0	true	none	false	false	ALLOW_STAGING_EXECUTION
 terra_as_auditor	AUDIT	gpt-5.6-terra	/root/auditor	AUDITOR	true	NONE	false	false	0	true	none	true	true	REJECT_MODEL_ROLE
 integrator_second_active_writer	EXECUTE	gpt-5.6-terra	/root	CANONICAL_INTEGRATOR	true	CANONICAL	false	false	1	true	none	false	false	REJECT_SECOND_ACTIVE_WRITER
+gpt61_analyze_review	ANALYZE	gpt-6.1-sol	/root	READ_ONLY_REVIEWER	true	NONE	false	false	0	true	none	false	false	ALLOW_BOUNDED_PLANNING
+gpt61_refine_review	REFINE	gpt-6.1-sol	/root	READ_ONLY_REVIEWER	true	NONE	false	false	0	true	none	false	false	ALLOW_BOUNDED_PLANNING
+gpt61_execute_staging	EXECUTE	gpt-6.1-sol	/root/writer	STAGING_WRITER	true	OWN_STAGING	false	false	0	true	none	false	false	ALLOW_STAGING_EXECUTION
+gpt61_execute_root	EXECUTE	gpt-6.1-sol	/root	CANONICAL_INTEGRATOR	true	CANONICAL	false	false	0	true	none	false	false	ALLOW_CANONICAL_EXECUTION
+gpt61_audit	AUDIT	gpt-6.1-sol	/root/auditor	AUDITOR	true	NONE	false	false	0	true	none	true	true	ACCEPT_RECEIPT

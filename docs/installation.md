@@ -1,68 +1,67 @@
 # Installation
 
-## Requirements
+Use macOS/Linux and Python 3.9 or later; CI targets 3.9 and 3.13. The suite has no
+third-party Python dependency. Check model availability and optional custom-agent
+configuration in your actual Codex runtime before adopting the templates.
 
-- macOS or Linux
-- Python 3.9–3.13
-- A current Codex release with Skills, custom agents, and hooks support
-
-No third-party Python dependency is required.
-
-## Inspect and validate
+## Inspect, validate and install
 
 ```bash
 git clone https://github.com/lianglunping/codex-three-stage-workflow.git
 cd codex-three-stage-workflow
 python3 scripts/audit_public_release.py .
 python3 scripts/validate_all.py
-```
-
-## Preview installation
-
-```bash
 python3 scripts/install.py --codex-home "${CODEX_HOME:-$HOME/.codex}"
+python3 scripts/install.py --codex-home "${CODEX_HOME:-$HOME/.codex}" --apply
 ```
 
-Dry-run is the default and is byte-for-byte non-mutating. Inspect every target
-printed by the command before applying. The installer rejects the filesystem
-root and the user's home directory as `--codex-home`; use a dedicated Codex
-home directory.
+Dry-run is the default. `--apply` copies the four bundled skills, runtime policy
+and four optional read-only agent definitions. Existing target files are backed
+up under the selected Codex home. The installer rejects the filesystem root
+and the user's home directory as targets. It never edits `AGENTS.md`,
+`config.toml` or `hooks.json` and never activates agents, hooks or plugins.
 
-## Apply installation
+Manually merge `examples/AGENTS.md` if you want project routing instructions.
+`examples/config.toml` is an optional root-model preference. Installing templates
+does not change a running model or authorize delegation. New runs require
+policy `2.1.0`, actual model-routing evidence and applicable user authority.
+
+## Upgrade from 0.1.0
+
+1. Finish or preserve any active run before changing its installed runtime.
+   Back up its existing workflow and policy; retain the runtime needed to read
+   legacy records. This release does not migrate active task records.
+2. Review the dry-run, then apply the new package. Public package version
+   `0.2.0` is distinct from runtime policy version `2.1.0`.
+3. If you enabled the old `three_stage_write_guard.py` hook, remove only that
+   entry from your active hook configuration; keep every unrelated hook.
+   The old guard hardcodes Sol/Terra rules and does not implement the current
+   stage, authority or dynamic-model contract. This release no longer ships it.
+   Review the host's hook-trust interface and restart the relevant session to
+   reload the changed configuration. The installer leaves existing hooks alone.
+4. Merge the updated generic AGENTS instructions. Use `MANUAL` unless the user
+   explicitly authorized bounded automatic progression for the specific task.
+5. Start new records with `workflow_policy_version: "2.1.0"` and `model_routing`.
+   Existing records without those fields retain legacy semantics; old repair
+   budgets remain fixed unless explicitly migrated under separate authority.
+
+## Validate an installation
 
 ```bash
-python3 scripts/install.py \
-  --codex-home "${CODEX_HOME:-$HOME/.codex}" \
-  --apply
+python3 /path/to/codex-home/skills/three-stage-complex-workflow/scripts/validate_bundle.py \
+  --codex-home /path/to/codex-home \
+  --agents-skills-root /path/to/codex-home/skills
 ```
 
-The installer copies four Skills, the runtime policy, the hook, and four custom
-agent definitions. Existing target files are first copied into a timestamped
-backup below the selected Codex home. The installer never edits `config.toml`
-or `hooks.json`.
+This checks the chosen home's AGENTS instructions, policy and companion skills.
+It runs synthetic state, routing and repair tests; it does not execute research
+jobs or establish the authenticity of a real approval. The repository entry
+`python3 scripts/validate_all.py` additionally tests installer, control-plane
+and privacy regressions in a disposable home, without reading your configuration.
 
-Review and manually merge only the ordinary configuration snippets:
+## Rollback
 
-- `examples/config.toml`
-- `examples/AGENTS.md`
-
-Do not enable a global three-stage write guard. If an explicitly activated,
-dedicated strict session needs defense in depth, review and manually opt into
-`examples/hooks.strict.json`. It allows a Sol-to-Terra handoff but rejects other
-strict-mode Sol mutation or spawn attempts. After enabling it, use `/hooks` in
-Codex CLI to review and trust the exact definition. Codex records hook trust
-against its hash, so a changed hook must be reviewed again.
-
-## Upgrade from v0.1.0
-
-Remove only the former `three_stage_write_guard.py` `PreToolUse` block that was
-manually added to your user `hooks.json`; retain every other hook. Keep the
-installed script because it is still the optional strict-session component.
-Fully restart Codex and start a new session to reload the hook list.
-
-## Uninstall or rollback
-
-The installer deliberately has no automatic uninstall command. Review the
-installed target list and restore the relevant files from the timestamped
-backup. If no prior target existed, remove only the exact files installed by
-this repository. Never recursively delete an entire Codex home.
+Restore the relevant files from the installer's timestamped backup and use the
+runtime matching any preserved active record. Restore manually merged settings
+from your own backup. Remove only newly installed files that you have identified;
+never recursively delete a Codex home.

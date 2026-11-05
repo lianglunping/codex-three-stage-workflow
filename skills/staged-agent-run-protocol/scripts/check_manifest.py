@@ -12,7 +12,7 @@ from sar_utils import (
     REMOTE_COMMAND_HEADER, REMOTE_JOB_HEADER, SOFTWARE_HEADER, STAGE_HEADER,
     STORAGE_POLICY_HEADER, SYNC_HEADER, TODO_HEADER, TODO_HISTORY_HEADER,
     has_substantive_content, nonempty_text, read_simple_yaml, read_tsv,
-    validate_tsv_header, validate_model_for_role,
+    validate_tsv_header, validate_assignment_model,
 )
 from audit_receipt import receipt_issues
 
@@ -236,15 +236,13 @@ def main() -> int:
                 issues.append(f"assignment_missing_required_field\t{assignment_id}\t{field}")
         if row.get("role") not in {"READ_ONLY_REVIEWER", "STAGING_WRITER", "CANONICAL_INTEGRATOR", "AUDITOR"}:
             issues.append(f"assignment_invalid_role\t{assignment_id}\t{row.get('role', '')}")
-        if not validate_model_for_role(row.get("model", ""), row.get("role", "")):
+        if not validate_assignment_model(row):
             issues.append(f"assignment_invalid_model_role\t{assignment_id}")
         if row.get("role") in {"READ_ONLY_REVIEWER", "AUDITOR"} and row.get("write_scope", ""):
             issues.append(f"assignment_read_only_has_write_scope\t{assignment_id}")
         if row.get("role") == "CANONICAL_INTEGRATOR":
             if row.get("agent_path") not in {"root", "/root"}:
                 issues.append(f"assignment_nonroot_integrator\t{assignment_id}")
-            if row.get("model", "").lower() == "gpt-5.6-sol":
-                issues.append(f"assignment_sol_integrator_forbidden\t{assignment_id}")
         if row.get("role") == "STAGING_WRITER":
             owned_root = (run_dir / "coordination/staging" / assignment_id).resolve()
             for raw_scope in row.get("write_scope", "").split("|"):

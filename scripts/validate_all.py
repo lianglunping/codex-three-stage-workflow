@@ -5,6 +5,9 @@ from __future__ import annotations
 
 import subprocess
 import sys
+import os
+import shutil
+import tempfile
 from pathlib import Path
 
 
@@ -28,44 +31,22 @@ def main() -> int:
             "unittest",
             [python, "-B", "-m", "unittest", "discover", "-s", "tests", "-v"],
         ),
-        (
-            "workflow-contract",
-            [
-                python,
-                "-B",
-                "skills/three-stage-complex-workflow/scripts/validate_workflow_contract.py",
-                "--skill-root",
-                "skills/three-stage-complex-workflow",
-                "--agents",
-                "examples/AGENTS.md",
-                "--cases",
-                "skills/three-stage-complex-workflow/references/regression_cases.tsv",
-                "--policy",
-                "runtime/policies/three-stage-runtime-v1.json",
-            ],
-        ),
-        (
-            "coordination-contract",
-            [
-                python,
-                "-B",
-                "skills/three-stage-complex-workflow/scripts/validate_parallel_coordination_contract.py",
-                "--workflow-skill",
-                "skills/three-stage-complex-workflow/SKILL.md",
-                "--dispatch-skill",
-                "skills/dispatching-parallel-agents/SKILL.md",
-                "--run-skill",
-                "skills/staged-agent-run-protocol/SKILL.md",
-                "--audit-skill",
-                "skills/project-audit/SKILL.md",
-                "--cases",
-                "skills/three-stage-complex-workflow/references/parallel_coordination_cases.tsv",
-                "--policy",
-                "runtime/policies/three-stage-runtime-v1.json",
-            ],
-        ),
     )
-    return 0 if all(run(label, command) for label, command in commands) else 1
+    # Exercise the delivered installer and bundle in an isolated home. Never read
+    # personal AGENTS, policies, credentials or task records during release QA.
+    with tempfile.TemporaryDirectory(prefix="three-stage-validation-") as temporary:
+        home = Path(temporary) / "codex-home"
+        os.environ["CODEX_HOME"] = str(home)
+        os.environ["PYTHONDONTWRITEBYTECODE"] = "1"
+        if not run("isolated-install", [python, "-B", "scripts/install.py",
+                                      "--codex-home", str(home), "--apply"]):
+            return 1
+        shutil.copy2(ROOT / "examples/AGENTS.md", home / "AGENTS.md")
+        results = [run(label, command) for label, command in commands]
+        results.append(run("installed-bundle", [python, "-B",
+            str(home / "skills/three-stage-complex-workflow/scripts/validate_bundle.py"),
+            "--codex-home", str(home), "--agents-skills-root", str(home / "skills")]))
+        return 0 if all(results) else 1
 
 
 if __name__ == "__main__":

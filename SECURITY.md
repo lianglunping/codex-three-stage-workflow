@@ -2,19 +2,16 @@
 
 ## Supported versions
 
-Security fixes currently target the latest tagged release.
+Security fixes target the current main branch and the latest maintained release.
 
 ## Reporting a vulnerability
 
-Use GitHub's private vulnerability-reporting or Security Advisory interface for
-the repository. Do not open a public issue for an unpatched vulnerability and
-do not include credentials, transcripts, unpublished data, or private paths.
+Use the repository's private vulnerability-reporting or Security Advisory
+interface where available. Do not publish credentials, transcripts, unpublished
+data or private paths in an issue. Include the affected version, operating
+system, minimal reproduction and impact.
 
-Include the affected version, operating system, Codex version, minimal
-reproduction, impact, and whether the hook was enabled or disabled. Expect an
-initial acknowledgement through GitHub within seven days.
-
-The included hook is defense in depth. It evaluates declared hook payloads,
-fails open on internal exceptions, and has an explicit disable sentinel. It is
-not an operating-system sandbox or a replacement for Codex permissions,
-repository review, and least-privilege configuration.
+The skills and validators check declared workflow contracts and evidence
+structure. They do not authenticate authority or enforce an OS security boundary.
+The legacy strict hook is retired in 0.2.0. See
+[Security Boundary](docs/security-boundary.md) for current limits and migration.

@@ -1,10 +1,6 @@
 ---
 name: staged-agent-run-protocol
-description: >-
-  Use when the user asks to execute, resume, or recover an explicitly approved
-  multi-stage or long-running research plan that needs auditable run control.
-  Do not use to create or debate plans, for simple Q&A, read-only diagnosis,
-  small direct changes, or plans that have not been approved.
+description: "Approved research-run execution and recovery with auditable state, provenance, QC gates and frozen outputs. Use for an authorized run, not for planning or ordinary questions."
 ---
 
 # Staged Agent Run Protocol
@@ -23,7 +19,7 @@ status values in English.
   control, including ordinary approved research execution and an explicitly
   invoked or verifiably active three-stage run. It does not itself constrain
   ordinary task reads, file generation, writes, or agent dispatch.
-- Sol/Terra model roles apply only within an explicit or active three-stage run.
+- Runtime-policy model roles apply only within an explicit or active three-stage run.
 - Consume an approved plan; do not recreate, debate, or materially redesign it.
 - Bootstrap a run directory only to establish control records, not to reopen
   scientific planning.
@@ -99,15 +95,26 @@ rendered HTML page as the only state record.
 
 Within an explicit or active three-stage run, load
 `<CODEX_HOME>/policies/three-stage-runtime-v1.json` as the machine-readable
-complement to this contract. Its `explicit_skill_or_active_run` activation means
-every assignment requires an allowed model, terminal assignments cannot reopen,
+complement to this contract. Its
+`explicit_skill_natural_autonomy_or_active_run` activation means
+every assignment requires evidence-supported model suitability, terminal assignments cannot reopen,
 and current runtime policy permits at most one active writer. It is not a
 global model permission rule.
 
-Prefer `gpt-5.6-sol` for Analyze/Refine read-only synthesis and bounded plan
-refinement. Prefer `gpt-5.6-terra` for Execute implementation. Model selection
-never grants authority: `gpt-5.6-sol` cannot be the canonical writer or
-`CANONICAL_INTEGRATOR`; `gpt-5.6-terra` remains limited by the approved scope.
+Within an explicit or active three-stage run, new-run stage leads default to
+`gpt-6-astra` for ANALYZE/REFINE and `gpt-6.1-sol` for EXECUTE, unless explicit
+user model evidence overrides them. Keep the observed root identity distinct
+from the actual stage lead. Delegate only with applicable human authority and
+available tools; unavailable routes pause without silent fallback. Child model
+IDs have no fixed allowlist: current runtime availability and a separate task
+capability assessment establish suitability; neither grants stage or file rights.
+Legacy records keep their prior compatibility semantics. Use the three-stage
+composition contract for evidence schemas and `register_agent_assignment.py`
+with `--runtime-evidence`, `--capability-evidence`, `--workflow-stage`,
+`--delegation-authorized` and `--delegation-evidence` for dynamic child models.
+The registry retains evidence paths and hashes in notes. Root-only canonical
+integration, read-only planning, scope isolation and at most one active writer
+remain mandatory.
 
 When more than one agent participates, register every assignment before work
 starts. Use only `READ_ONLY_REVIEWER`, `STAGING_WRITER`,

@@ -1,6 +1,6 @@
 ---
 name: dispatching-parallel-agents
-description: Use when facing 2+ independent tasks that can be worked on without shared state or sequential dependencies
+description: "Parallel agent coordination for explicitly authorized independent subtasks. Define isolated assignments, write boundaries and integration evidence."
 ---
 
 # Dispatching Parallel Agents
@@ -19,9 +19,10 @@ sequentially.
 
 For an explicit or active three-stage run, apply
 `<CODEX_HOME>/policies/three-stage-runtime-v1.json`; its
-`explicit_skill_or_active_run` mode permits at most one active writer. Outside
+`explicit_skill_natural_autonomy_or_active_run` mode permits at most one active
+writer. Outside
 that run, this Skill still prevents overlapping canonical writes but does not
-assign global Sol/Terra file permissions.
+assign global model file permissions.
 
 Before dispatching, inspect the current unique deliverable, authoritative TODO,
 valid completion evidence, and running assignments. Stop a later assignment
@@ -32,6 +33,17 @@ Do not dispatch merely because concurrency is available. Parallel work is safe
 only when each assignment has an independently verifiable output and no shared
 mutable state. A Git worktree or separate directory isolates files but does not
 make overlapping semantic ownership safe.
+
+## Choose Agent Count
+
+Do not impose a fixed total or concurrency cap of three subagents. Choose the
+count from independently verifiable assignments, safe read/write isolation,
+resource budgets, and the current runtime allowance. More than three subagents
+may be used when authorized and supported by the runtime. Batch pending
+assignments when they exceed concurrent capacity; concurrency does not define
+the total number of subtasks that may be delegated over a task. Examples with
+three agents illustrate decomposition, not a limit. This guidance does not
+grant delegation authority or override system or tool limits.
 
 ## Register Every Assignment
 
@@ -52,10 +64,20 @@ Use exactly one role:
 | `CANONICAL_INTEGRATOR` | root only; canonical paths |
 | `AUDITOR` | none; reads a sealed revision |
 
-Within an explicit or active three-stage run, `gpt-5.6-sol` is appropriate for
-read-only analysis or plan refinement and must never receive canonical write
-authority. `gpt-5.6-terra` is preferred for execution assignments. Model
-identity never overrides role, scope, stage, or user authority.
+Within an explicit or active three-stage run, new-run stage leads default to
+`gpt-6-astra` for ANALYZE/REFINE and `gpt-6.1-sol` for EXECUTE, unless explicit
+user model evidence overrides them. Keep the observed root identity distinct
+from the actual stage lead. Delegate only with applicable human authority and
+available tools; unavailable routes pause without silent fallback. Child model
+IDs have no fixed allowlist: current runtime availability and a separate task
+capability assessment establish suitability; neither grants stage or file rights.
+Legacy records keep their prior compatibility semantics. Use the three-stage
+composition contract for evidence schemas and `register_agent_assignment.py`
+with `--runtime-evidence`, `--capability-evidence`, `--workflow-stage`,
+`--delegation-authorized` and `--delegation-evidence` for dynamic child models.
+The registry retains evidence paths and hashes in notes. Root-only canonical
+integration, read-only planning, scope isolation and at most one active writer
+remain mandatory.
 
 Reject the assignment before dispatch when:
 
@@ -153,13 +175,14 @@ Each agent gets:
 
 ### 3. Dispatch in Parallel
 
-Issue all three subagent dispatches in the same response — they run in parallel:
+Dispatch independent assignments up to the available runtime capacity. The
+following three-assignment example is illustrative, not a required count or cap:
 
 ```text
 Subagent (general-purpose): "Fix agent-tool-abort.test.ts failures"
 Subagent (general-purpose): "Fix batch-completion-behavior.test.ts failures"
 Subagent (general-purpose): "Fix tool-approval-race-conditions.test.ts failures"
-# All three run concurrently.
+# Run concurrently when capacity permits; otherwise dispatch in batches.
 ```
 
 Multiple dispatch calls in one response = parallel execution. One per response = sequential.

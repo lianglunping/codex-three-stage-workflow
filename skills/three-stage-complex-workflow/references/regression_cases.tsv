@@ -1,25 +1,49 @@
-case_id	task_kind	explicit_invocation	prior_stage	workflow_task_id	current_task_id	run_status	selected_option	approval_evidence	material_drift	requested_action	expected_route	expected_stage	expected_specialist	expected_model	expected_model_role
-simple_qa	simple_qa	false	NONE	none	none	NONE	none	none	false	answer	ordinary	NONE	none	runtime-default	ORDINARY
-small_direct_change	small_direct_change	false	NONE	none	none	NONE	none	none	false	edit	ordinary	NONE	none	runtime-default	ORDINARY
-explicit_simple_request	simple_qa	true	NONE	none	none	NONE	none	none	false	analyze	three-stage	ANALYZE	none	gpt-5.6-sol	READ_ONLY_PLANNER
-ordinary_multifile	complex_multifile	false	NONE	none	none	NONE	none	none	false	analyze	ordinary	NONE	none	runtime-default	ORDINARY
-ordinary_readonly_diagnosis	complex_diagnosis	false	NONE	none	none	NONE	none	none	false	analyze	ordinary	NONE	none	runtime-default	ORDINARY
-ordinary_file_generation	file_generation	false	NONE	none	none	NONE	none	none	false	write	ordinary	NONE	none	runtime-default	ORDINARY
-selected_option_active_run	complex_multifile	false	ANALYZE	task-selected	task-selected	ACTIVE	option-1	none	false	refine	three-stage	REFINE	none	gpt-5.6-sol	PLAN_REFINER
-approved_refine_active_run	complex_multifile	false	REFINE	task-approved	task-approved	ACTIVE	option-1	approved	false	execute	three-stage	EXECUTE	none	gpt-5.6-terra	EXECUTION_WORKER
-approved_plan_active_run	complex_multifile	false	REFINE	task-resume	task-resume	ACTIVE	option-1	approved	false	resume	three-stage	EXECUTE	none	gpt-5.6-terra	EXECUTION_WORKER
-material_scope_drift	complex_multifile	false	EXECUTE	task-drift	task-drift	ACTIVE	option-1	approved	true	continue	three-stage	AFFECTED_PLANNING_STAGE	none	gpt-5.6-sol	PLAN_REFINER
-closed_three_stage_run	complex_multifile	false	EXECUTE	task-closed	task-closed	CLOSED	option-1	approved	false	continue	ordinary	NONE	none	runtime-default	ORDINARY
-missing_workflow_task_id	complex_multifile	false	ANALYZE	none	task-current	ACTIVE	none	none	false	refine	ordinary	NONE	none	runtime-default	ORDINARY
-missing_current_task_id	complex_multifile	false	ANALYZE	task-workflow	none	ACTIVE	none	none	false	refine	ordinary	NONE	none	runtime-default	ORDINARY
-mismatched_active_task_specialist	routine_monitor	false	ANALYZE	task-workflow	task-current	ACTIVE	none	none	false	monitor	specialist	NONE	job-monitor-loop	runtime-default	ORDINARY
-routine_monitor	routine_monitor	false	NONE	none	none	NONE	none	none	false	monitor	specialist	NONE	job-monitor-loop	runtime-default	ORDINARY
-ordinary_long_running_design	long_running_design	false	NONE	none	none	NONE	none	none	false	design	ordinary	NONE	none	runtime-default	ORDINARY
-complex_coding_pro	complex_coding_pro	false	NONE	none	none	NONE	none	none	false	analyze	specialist	NONE	orchestrate-chatgpt-pro-development	runtime-default	ORDINARY
-scientific_planning	scientific_planning	false	NONE	none	none	NONE	none	none	false	analyze	specialist	NONE	multi-agent-bioinformatics-planner	runtime-default	ORDINARY
-approved_research_execution	approved_research_execution	false	NONE	none	none	NONE	plan-a	approved	false	execute	specialist	NONE	staged-agent-run-protocol	runtime-default	ORDINARY
-implementation_planning	implementation_planning	false	ANALYZE	task-implementation	task-implementation	ACTIVE	option-1	none	false	refine	three-stage	REFINE	writing-plans	gpt-5.6-sol	PLAN_REFINER
-approved_software_execution	approved_software_execution	false	REFINE	task-software	task-software	ACTIVE	plan-a	approved	false	execute	three-stage	EXECUTE	executing-plans	gpt-5.6-terra	EXECUTION_WORKER
-runtime_policy_execute	complex_multifile	false	REFINE	task-policy-execute	task-policy-execute	ACTIVE	policy-a	approved	false	execute	three-stage	EXECUTE	none	gpt-5.6-terra	EXECUTION_WORKER
-runtime_policy_sol_refine	complex_multifile	false	ANALYZE	task-policy-refine	task-policy-refine	ACTIVE	policy-a	none	false	refine	three-stage	REFINE	none	gpt-5.6-sol	PLAN_REFINER
-policy_alias_readonly	complex_multifile	true	NONE	none	none	NONE	none	none	false	analyze	three-stage	ANALYZE	none	gpt-5.6-sol	READ_ONLY_PLANNER
+case_id	task_kind	invocation_text	explicit_invocation	prior_stage	workflow_task_id	current_task_id	run_status	autonomy_mode	authority_envelope	selected_option	approval_evidence	material_drift	stop_condition	requested_action	expected_route	expected_stage	expected_autonomy_mode	expected_transition	expected_specialist	expected_model	expected_model_role
+simple_qa	simple_qa	none	false	NONE	none	none	NONE	NONE	none	none	none	false	none	answer	ordinary	NONE	NONE	NONE	none	runtime-default	ORDINARY
+small_direct_change	small_direct_change	none	false	NONE	none	none	NONE	NONE	none	none	none	false	none	edit	ordinary	NONE	NONE	NONE	none	runtime-default	ORDINARY
+explicit_simple_request	simple_qa	请使用 $three-stage-complex-workflow 分析	true	NONE	none	none	NONE	NONE	none	none	none	false	none	analyze	three-stage	ANALYZE	MANUAL	REQUEST_SELECTION	none	gpt-6.1-sol	READ_ONLY_PLANNER
+ordinary_multifile	complex_multifile	请修改多个文件	false	NONE	none	none	NONE	NONE	none	none	none	false	none	analyze	ordinary	NONE	NONE	NONE	none	runtime-default	ORDINARY
+ordinary_readonly_diagnosis	complex_diagnosis	请诊断这个复杂问题	false	NONE	none	none	NONE	NONE	none	none	none	false	none	analyze	ordinary	NONE	NONE	NONE	none	runtime-default	ORDINARY
+ordinary_file_generation	file_generation	请生成文件	false	NONE	none	none	NONE	NONE	none	none	none	false	none	write	ordinary	NONE	NONE	NONE	none	runtime-default	ORDINARY
+selected_option_active_run	complex_multifile	none	false	ANALYZE	task-selected	task-selected	ACTIVE	MANUAL	none	option-1	none	false	none	refine	three-stage	REFINE	MANUAL	REQUEST_EXECUTION_APPROVAL	none	gpt-6.1-sol	PLAN_REFINER
+approved_refine_active_run	complex_multifile	none	false	REFINE	task-approved	task-approved	ACTIVE	MANUAL	approved-scope	option-1	approved	false	none	execute	three-stage	EXECUTE	MANUAL	EXECUTE	none	gpt-6.1-sol	EXECUTION_WORKER
+approved_plan_active_run	complex_multifile	none	false	REFINE	task-resume	task-resume	ACTIVE	MANUAL	approved-scope	option-1	approved	false	none	resume	three-stage	EXECUTE	MANUAL	EXECUTE	none	gpt-6.1-sol	EXECUTION_WORKER
+material_scope_drift	complex_multifile	none	false	EXECUTE	task-drift	task-drift	ACTIVE	MANUAL	approved-scope	option-1	approved	true	none	continue	three-stage	AFFECTED_PLANNING_STAGE	MANUAL	PAUSE_SCOPE_DRIFT	none	gpt-6.1-sol	PLAN_REFINER
+closed_three_stage_run	complex_multifile	none	false	EXECUTE	task-closed	task-closed	CLOSED	MANUAL	approved-scope	option-1	approved	false	none	continue	ordinary	NONE	NONE	NONE	none	runtime-default	ORDINARY
+missing_workflow_task_id	complex_multifile	none	false	ANALYZE	none	task-current	ACTIVE	MANUAL	none	none	none	false	none	refine	ordinary	NONE	NONE	NONE	none	runtime-default	ORDINARY
+missing_current_task_id	complex_multifile	none	false	ANALYZE	task-workflow	none	ACTIVE	MANUAL	none	none	none	false	none	refine	ordinary	NONE	NONE	NONE	none	runtime-default	ORDINARY
+mismatched_active_task_specialist	routine_monitor	none	false	ANALYZE	task-workflow	task-current	ACTIVE	MANUAL	none	none	none	false	none	monitor	specialist	NONE	NONE	NONE	job-monitor-loop	runtime-default	ORDINARY
+routine_monitor	routine_monitor	none	false	NONE	none	none	NONE	NONE	none	none	none	false	none	monitor	specialist	NONE	NONE	NONE	job-monitor-loop	runtime-default	ORDINARY
+ordinary_long_running_design	long_running_design	none	false	NONE	none	none	NONE	NONE	none	none	none	false	none	design	ordinary	NONE	NONE	NONE	none	runtime-default	ORDINARY
+complex_coding_pro	complex_coding_pro	none	false	NONE	none	none	NONE	NONE	none	none	none	false	none	analyze	specialist	NONE	NONE	NONE	orchestrate-chatgpt-pro-development	runtime-default	ORDINARY
+scientific_planning	scientific_planning	none	false	NONE	none	none	NONE	NONE	none	none	none	false	none	analyze	specialist	NONE	NONE	NONE	multi-agent-bioinformatics-planner	runtime-default	ORDINARY
+approved_research_execution	approved_research_execution	none	false	NONE	none	none	NONE	NONE	none	plan-a	approved	false	none	execute	specialist	NONE	NONE	NONE	staged-agent-run-protocol	runtime-default	ORDINARY
+implementation_planning	implementation_planning	none	false	ANALYZE	task-implementation	task-implementation	ACTIVE	MANUAL	none	option-1	none	false	none	refine	three-stage	REFINE	MANUAL	REQUEST_EXECUTION_APPROVAL	writing-plans	gpt-6.1-sol	PLAN_REFINER
+approved_software_execution	approved_software_execution	none	false	REFINE	task-software	task-software	ACTIVE	MANUAL	approved-scope	plan-a	approved	false	none	execute	three-stage	EXECUTE	MANUAL	EXECUTE	executing-plans	gpt-6.1-sol	EXECUTION_WORKER
+runtime_policy_execute	complex_multifile	none	false	REFINE	task-policy-execute	task-policy-execute	ACTIVE	MANUAL	approved-scope	policy-a	approved	false	none	execute	three-stage	EXECUTE	MANUAL	EXECUTE	none	gpt-6.1-sol	EXECUTION_WORKER
+runtime_policy_sol_refine	complex_multifile	none	false	ANALYZE	task-policy-refine	task-policy-refine	ACTIVE	MANUAL	none	policy-a	none	false	none	refine	three-stage	REFINE	MANUAL	REQUEST_EXECUTION_APPROVAL	none	gpt-6.1-sol	PLAN_REFINER
+policy_alias_readonly	complex_multifile	$three-stage-complex-workflow	true	NONE	none	none	NONE	NONE	none	none	none	false	none	analyze	three-stage	ANALYZE	MANUAL	REQUEST_SELECTION	none	gpt-6.1-sol	READ_ONLY_PLANNER
+natural_auto_exact_figure	figure_improvement	请你完善这个图,直到通过,自动完成3阶段工作流	false	NONE	none	none	NONE	NONE	derived-figure-scope	none	auto-authorized	false	none	analyze	three-stage	ANALYZE	BOUNDED_AUTO	AUTO_CONTINUE	none	gpt-6.1-sol	READ_ONLY_PLANNER
+natural_auto_chinese_synonym	complex_multifile	请全自主推进三阶段工作流完成当前任务	false	NONE	none	none	NONE	NONE	derived-task-scope	none	auto-authorized	false	none	analyze	three-stage	ANALYZE	BOUNDED_AUTO	AUTO_CONTINUE	none	gpt-6.1-sol	READ_ONLY_PLANNER
+explicit_skill_auto	complex_multifile	请用 $three-stage-complex-workflow 自动完成这个任务	true	NONE	none	none	NONE	NONE	derived-task-scope	none	auto-authorized	false	none	analyze	three-stage	ANALYZE	BOUNDED_AUTO	AUTO_CONTINUE	none	gpt-6.1-sol	READ_ONLY_PLANNER
+workflow_meta_question	workflow_meta_question	三阶段工作流是否可以自动完成？	false	NONE	none	none	NONE	NONE	none	none	none	false	none	answer	ordinary	NONE	NONE	NONE	none	runtime-default	ORDINARY
+plain_natural_workflow_mention	complex_multifile	请用三阶段工作流处理任务	false	NONE	none	none	NONE	NONE	none	none	none	false	none	analyze	ordinary	NONE	NONE	NONE	none	runtime-default	ORDINARY
+active_bounded_auto_execute	complex_multifile	none	false	REFINE	task-auto-execute	task-auto-execute	ACTIVE	BOUNDED_AUTO	approved-task-scope	minimum-intrusion	auto-authorized	false	none	execute	three-stage	EXECUTE	BOUNDED_AUTO	AUTO_CONTINUE	none	gpt-6.1-sol	EXECUTION_WORKER
+bounded_auto_destructive_stop	complex_multifile	请删除原始数据并自动完成三阶段工作流	false	NONE	none	none	NONE	NONE	derived-task-scope	none	auto-authorized	false	destructive_or_irreversible	analyze	three-stage	ANALYZE	BOUNDED_AUTO	PAUSE_STOP_CONDITION	none	gpt-6.1-sol	READ_ONLY_PLANNER
+bounded_auto_missing_authority	complex_multifile	请自动推进三阶段工作流完成当前任务	false	NONE	none	none	NONE	NONE	none	none	auto-authorized	false	none	analyze	three-stage	ANALYZE	BOUNDED_AUTO	PAUSE_AUTHORITY	none	gpt-6.1-sol	READ_ONLY_PLANNER
+bounded_auto_scope_drift	complex_multifile	none	false	EXECUTE	task-auto-drift	task-auto-drift	ACTIVE	BOUNDED_AUTO	approved-task-scope	minimum-intrusion	auto-authorized	true	none	continue	three-stage	AFFECTED_PLANNING_STAGE	BOUNDED_AUTO	PAUSE_SCOPE_DRIFT	none	gpt-6.1-sol	PLAN_REFINER
+bounded_auto_unverifiable	figure_improvement	请完善图直到通过并自动完成三阶段工作流	false	NONE	none	none	NONE	NONE	derived-figure-scope	none	auto-authorized	false	acceptance_cannot_be_verified	analyze	three-stage	ANALYZE	BOUNDED_AUTO	PAUSE_STOP_CONDITION	none	gpt-6.1-sol	READ_ONLY_PLANNER
+text_detected_meta_question	complex_multifile	请问三阶段工作流是否可以自动完成？	false	NONE	none	none	NONE	NONE	none	none	none	false	none	answer	ordinary	NONE	NONE	NONE	none	runtime-default	ORDINARY
+text_detected_explanation	complex_multifile	请介绍自动完成三阶段工作流的原理	false	NONE	none	none	NONE	NONE	none	none	none	false	none	answer	ordinary	NONE	NONE	NONE	none	runtime-default	ORDINARY
+natural_auto_colloquial	figure_improvement	请全程自动走完三阶段流程并完善当前图件	false	NONE	none	none	NONE	NONE	derived-figure-scope	none	auto-authorized	false	none	analyze	three-stage	ANALYZE	BOUNDED_AUTO	AUTO_CONTINUE	none	gpt-6.1-sol	READ_ONLY_PLANNER
+bounded_auto_total_budget	complex_multifile	请自动完成三阶段工作流并修复到通过	false	EXECUTE	task-auto-budget	task-auto-budget	ACTIVE	BOUNDED_AUTO	approved-task-scope	minimum-intrusion	auto-authorized	false	resource_budget_exhausted	continue	three-stage	EXECUTE	BOUNDED_AUTO	PAUSE_STOP_CONDITION	none	gpt-6.1-sol	EXECUTION_WORKER
+negated_auto_usage	complex_multifile	不要自动完成三阶段工作流，只告诉我怎么用。	false	NONE	none	none	NONE	NONE	none	none	none	false	none	answer	ordinary	NONE	NONE	NONE	none	runtime-default	ORDINARY
+explicit_manual_optout	complex_multifile	用 $three-stage-complex-workflow 处理当前任务，但不要自动推进。	true	NONE	none	none	NONE	NONE	none	none	none	false	none	analyze	three-stage	ANALYZE	MANUAL	REQUEST_SELECTION	none	gpt-6.1-sol	READ_ONLY_PLANNER
+english_ui_bounded_auto	complex_multifile	Use $three-stage-complex-workflow to automatically complete this task in BOUNDED_AUTO mode.	true	NONE	none	none	NONE	NONE	derived-task-scope	none	auto-authorized	false	none	analyze	three-stage	ANALYZE	BOUNDED_AUTO	AUTO_CONTINUE	none	gpt-6.1-sol	READ_ONLY_PLANNER
+nfkc_fullwidth_three	figure_improvement	请自动完成３阶段工作流并完善图件。	false	NONE	none	none	NONE	NONE	derived-figure-scope	none	auto-authorized	false	none	analyze	three-stage	ANALYZE	BOUNDED_AUTO	AUTO_CONTINUE	none	gpt-6.1-sol	READ_ONLY_PLANNER
+explicit_meta_suppressed	complex_multifile	请解释 $three-stage-complex-workflow 有什么作用，先不要启动任务。	true	NONE	none	none	NONE	NONE	none	none	none	false	none	answer	ordinary	NONE	NONE	NONE	none	runtime-default	ORDINARY
+active_missing_mode	complex_multifile	none	false	ANALYZE	task-mode	task-mode	ACTIVE	NONE	none	none	none	false	none	continue	ordinary	NONE	NONE	NONE	none	runtime-default	ORDINARY
+refine_missing_selection	complex_multifile	none	false	REFINE	task-refine-invalid	task-refine-invalid	ACTIVE	MANUAL	none	none	none	false	none	continue	ordinary	NONE	NONE	NONE	none	runtime-default	ORDINARY
+execute_missing_envelope	complex_multifile	none	false	EXECUTE	task-execute-invalid	task-execute-invalid	ACTIVE	MANUAL	none	option-1	approved	false	none	continue	ordinary	NONE	NONE	NONE	none	runtime-default	ORDINARY
+analyze_cannot_skip_refine	complex_multifile	none	false	ANALYZE	task-no-skip	task-no-skip	ACTIVE	MANUAL	approved-scope	option-1	approved	false	none	execute	three-stage	REFINE	MANUAL	REQUEST_EXECUTION_APPROVAL	none	gpt-6.1-sol	PLAN_REFINER
+explicit_autonomous_correction	figure_improvement	同意,走3阶段工作流全自主修正	false	NONE	none	none	NONE	NONE	derived-figure-scope	none	auto-authorized	false	none	analyze	three-stage	ANALYZE	BOUNDED_AUTO	AUTO_CONTINUE	none	gpt-6.1-sol	READ_ONLY_PLANNER

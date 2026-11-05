@@ -9,7 +9,7 @@ import subprocess
 import sys
 from pathlib import Path
 
-from sar_utils import AUDIT_RECEIPT_HEADER, file_lock, now, read_simple_yaml, read_tsv, update_tsv, validate_model_for_role
+from sar_utils import AUDIT_RECEIPT_HEADER, file_lock, now, read_simple_yaml, read_tsv, update_tsv, validate_assignment_model
 
 FINDING_FIELDS = ["finding_id", "severity", "status", "gate", "evidence_path"]
 SEVERITIES = {"Critical", "Major", "Minor", "Info"}
@@ -103,7 +103,7 @@ def receipt_issues(run_dir: Path, receipt: dict[str, str]) -> list[str]:
     assignment = next((row for row in assignments if row.get("assignment_id") == receipt.get("auditor_assignment_id")), None)
     if assignment is None or assignment.get("role") != "AUDITOR" or assignment.get("status") != "Completed":
         issues.append("auditor_not_completed_registered")
-    elif not validate_model_for_role(assignment.get("model", ""), "AUDITOR"):
+    elif not validate_assignment_model(assignment):
         issues.append("auditor_model_role_incompatible")
     elif assignment.get("base_revision") != revision or assignment.get("agent_path") != receipt.get("auditor"):
         issues.append("auditor_identity_or_revision_mismatch")

@@ -6,6 +6,7 @@ from __future__ import annotations
 import argparse
 import csv
 import json
+import os
 import pathlib
 import sys
 
@@ -17,11 +18,15 @@ COLUMNS = [
     "expected_decision",
 ]
 READ_ONLY = {"READ_ONLY_REVIEWER", "AUDITOR"}
+POLICY_KEYS = {
+    "version", "activation", "autonomy_modes", "stop_conditions",
+    "model_roles", "invariants", "limitations", "stage_model_defaults", "subagent_selection",
+}
 
 REQUIRED = {
     "workflow": [
-        "gpt-5.6-sol", "gpt-5.6-terra", "StageExitContract",
-        "must not hold canonical write permission", "same issue fingerprint", "three-stage-runtime-v1.json",
+        "gpt-6.1-sol", "StageExitContract", "sole canonical integrator",
+        "at most one active writer", "same issue fingerprint", "three-stage-runtime-v1.json",
     ],
     "dispatch": [
         "READ_ONLY_REVIEWER", "STAGING_WRITER", "CANONICAL_INTEGRATOR",
@@ -70,13 +75,47 @@ def load_policy(path: pathlib.Path) -> tuple[dict[str, list[str]], list[str]]:
     except (OSError, UnicodeError, json.JSONDecodeError) as exc:
         return {}, [f"cannot parse policy {path}: {exc}"]
     errors: list[str] = []
-    if not isinstance(policy, dict) or set(policy) != {"version", "activation", "model_roles", "invariants", "limitations"}:
-        return {}, ["invalid policy schema: expected version, activation, model_roles, invariants, limitations"]
+    if not isinstance(policy, dict) or set(policy) != POLICY_KEYS:
+        return {}, [
+            "invalid policy schema: expected version, activation, autonomy_modes, "
+            "stop_conditions, model_roles, invariants, limitations, stage_model_defaults, subagent_selection"
+        ]
+    from model_routing import validate_routing_policy
+    errors.extend(validate_routing_policy(policy))
     model_roles = policy["model_roles"]
     if not isinstance(policy["version"], str) or not policy["version"]:
         errors.append("invalid policy schema: version must be a nonempty string")
-    if policy.get("activation") != "explicit_skill_or_active_run":
-        errors.append("invalid policy schema: activation must be explicit_skill_or_active_run")
+    if policy.get("activation") != "explicit_skill_natural_autonomy_or_active_run":
+        errors.append(
+            "invalid policy schema: activation must be "
+            "explicit_skill_natural_autonomy_or_active_run"
+        )
+    autonomy_modes = policy["autonomy_modes"]
+    if not isinstance(autonomy_modes, dict) or set(autonomy_modes) != {
+        "MANUAL", "BOUNDED_AUTO",
+    }:
+        errors.append(
+            "invalid policy schema: autonomy_modes must define MANUAL and BOUNDED_AUTO"
+        )
+    elif (
+        autonomy_modes.get("MANUAL") != "explicit_each_gate"
+        or autonomy_modes.get("BOUNDED_AUTO")
+        != "automatic_within_authority_envelope"
+    ):
+        errors.append("invalid policy schema: unexpected autonomy mode semantics")
+    stop_conditions = policy["stop_conditions"]
+    if (
+        not isinstance(stop_conditions, list)
+        or any(not isinstance(item, str) or not item for item in stop_conditions)
+        or not {
+            "DESTRUCTIVE_OR_IRREVERSIBLE",
+            "OUTSIDE_AUTHORITY_ENVELOPE",
+            "ACCEPTANCE_CANNOT_BE_VERIFIED",
+            "REPEATED_FAILURE",
+            "RESOURCE_BUDGET_EXHAUSTED",
+        }.issubset(set(stop_conditions))
+    ):
+        errors.append("invalid policy schema: incomplete stop_conditions string list")
     if not isinstance(model_roles, dict) or not model_roles:
         errors.append("invalid policy schema: model_roles must be a nonempty object")
     elif any(not isinstance(model, str) or not model or not isinstance(roles, list) or not roles or any(not isinstance(role, str) or not role for role in roles) for model, roles in model_roles.items()):
@@ -88,7 +127,8 @@ def load_policy(path: pathlib.Path) -> tuple[dict[str, list[str]], list[str]]:
     return model_roles if not errors else {}, errors
 
 
-def resolve(row: dict[str, str], model_roles: dict[str, list[str]]) -> str:
+def resolve(row: dict[str, str], model_roles: dict[str, list[str]],
+            runtime_evidence=None, capability_evidence=None) -> str:
     case_id = row["case_id"]
     base_matches = parse_bool(row["base_matches"], case_id)
     overlap = parse_bool(row["overlaps_active"], case_id)
@@ -100,7 +140,11 @@ def resolve(row: dict[str, str], model_roles: dict[str, list[str]]) -> str:
     role = row["role"]
     scope = row["write_scope"]
 
-    if role not in model_roles.get(row["model"], []):
+    if runtime_evidence is not None or capability_evidence is not None:
+        from model_routing import model_supports_role
+        if not model_supports_role(row["model"], role, runtime_evidence, capability_evidence):
+            return "REJECT_MODEL_ROLE"
+    elif role not in model_roles.get(row["model"], []):
         return "REJECT_MODEL_ROLE"
     if role == "CANONICAL_INTEGRATOR" and row["agent_path"] not in {"root", "/root"}:
         return "REJECT_NONROOT_INTEGRATOR"
@@ -110,6 +154,8 @@ def resolve(row: dict[str, str], model_roles: dict[str, list[str]]) -> str:
         return "REJECT_STAGING_SCOPE"
     if role in {"STAGING_WRITER", "CANONICAL_INTEGRATOR"} and active_writer_count > 0:
         return "REJECT_SECOND_ACTIVE_WRITER"
+    if row["stage"] in {"ANALYZE", "REFINE"} and role not in READ_ONLY:
+        return "REJECT_PLANNING_WRITE_ROLE"
     if not base_matches:
         return "REJECT_STALE_BASE"
     if overlap:
@@ -134,6 +180,8 @@ def resolve(row: dict[str, str], model_roles: dict[str, list[str]]) -> str:
         return "ALLOW_BOUNDED_PLANNING"
     if row["stage"] == "EXECUTE" and role == "STAGING_WRITER":
         return "ALLOW_STAGING_EXECUTION"
+    if row["stage"] == "EXECUTE" and role == "CANONICAL_INTEGRATOR":
+        return "ALLOW_CANONICAL_EXECUTION"
     return "UNRESOLVED"
 
 
@@ -158,7 +206,7 @@ def main() -> int:
     parser.add_argument(
         "--policy",
         type=pathlib.Path,
-        default=pathlib.Path.home() / ".codex/policies/three-stage-runtime-v1.json",
+        default=pathlib.Path(os.environ.get("CODEX_HOME", pathlib.Path.home() / ".codex")) / "policies/three-stage-runtime-v1.json",
     )
     args = parser.parse_args()
 

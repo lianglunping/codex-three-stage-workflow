@@ -2,6 +2,8 @@
 from __future__ import annotations
 
 import argparse
+import hashlib
+import json
 from pathlib import Path
 
 from sar_utils import (
@@ -54,11 +56,38 @@ def main() -> int:
     parser.add_argument("--return-fingerprint", default="")
     parser.add_argument("--notes", default="")
     parser.add_argument("--update", action="store_true")
+    parser.add_argument("--runtime-evidence", type=Path)
+    parser.add_argument("--capability-evidence", type=Path)
+    parser.add_argument("--delegation-authorized", action="store_true")
+    parser.add_argument("--delegation-evidence")
+    parser.add_argument("--workflow-stage", choices=["ANALYZE", "REFINE", "EXECUTE"])
     args = parser.parse_args()
 
     run_dir = Path(args.run_dir).expanduser().resolve()
     registry = run_dir / "coordination/agent_assignments.tsv"
     canonical_revision = ""
+    runtime = capabilities = None
+    evidence_note = ""
+    if args.runtime_evidence or args.capability_evidence:
+        try:
+            if not args.runtime_evidence or not args.capability_evidence:
+                raise ValueError("both runtime and independent task capability evidence are required")
+            runtime = json.loads(args.runtime_evidence.read_text(encoding="utf-8"))
+            if not isinstance(runtime, dict):
+                raise ValueError("runtime evidence must be an object")
+            capabilities = json.loads(args.capability_evidence.read_text(encoding="utf-8"))
+            evidence_note = "model_evidence=" + json.dumps({
+                "runtime": {"path": str(args.runtime_evidence.resolve()),
+                    "sha256": hashlib.sha256(args.runtime_evidence.read_bytes()).hexdigest()},
+                "capabilities": {"path": str(args.capability_evidence.resolve()),
+                    "sha256": hashlib.sha256(args.capability_evidence.read_bytes()).hexdigest()},
+                "stage": args.workflow_stage,
+                "delegation_authorized": args.delegation_authorized,
+                "delegation_evidence": args.delegation_evidence,
+            }, sort_keys=True)
+        except (OSError, ValueError) as exc:
+            print(f"ERROR: {exc}")
+            return 1
 
     def mutate(rows: list[dict[str, object]]) -> list[dict[str, object]]:
         existing = next((row for row in rows if row.get("assignment_id") == args.assignment_id), None)
@@ -86,7 +115,16 @@ def main() -> int:
             raise ValueError(f"duplicate assignment_id: {args.assignment_id}")
         if not args.agent_path or not args.role or not args.base_revision or not args.model:
             raise ValueError("new assignment requires agent-path, role, model, and base-revision")
-        if not validate_model_for_role(args.model, args.role):
+        if runtime is not None and args.workflow_stage is None:
+            raise ValueError("dynamic assignment requires workflow-stage")
+        if runtime is not None and args.agent_path not in {"root", "/root"}:
+            if not args.delegation_authorized or not args.delegation_evidence:
+                raise ValueError("dynamic child assignment requires independent delegation authority evidence")
+            if runtime.get("delegation_tool_available") is not True:
+                raise ValueError("delegation tool unavailable")
+        if args.workflow_stage in {"ANALYZE", "REFINE"} and args.role not in {"READ_ONLY_REVIEWER", "AUDITOR"}:
+            raise ValueError("planning stages cannot register write roles")
+        if not validate_model_for_role(args.model, args.role, runtime, capabilities):
             raise ValueError("model is absent, unsupported, or incompatible with role")
         if args.base_revision != canonical_revision:
             raise ValueError(
@@ -152,7 +190,7 @@ def main() -> int:
             "started_time": now() if args.status in ACTIVE else "",
             "finished_time": now() if args.status not in ACTIVE else "",
             "return_fingerprint": args.return_fingerprint,
-            "notes": args.notes,
+            "notes": " | ".join(v for v in (args.notes, evidence_note) if v),
         }
         rows.append(row)
         return rows

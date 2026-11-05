@@ -1,12 +1,4 @@
-# Merge only the settings you understand into your active Codex config.
-model = "gpt-5.6-terra"
+# Optional root model preference. Merge manually after checking runtime availability.
+# This does not switch a running model or grant delegation authority.
+model = "gpt-6.1-sol"
 model_reasoning_effort = "medium"
-
-[agents]
-enabled = true
-max_concurrent_threads_per_session = 8
-default_subagent_model = "gpt-5.6-sol"
-default_subagent_reasoning_effort = "medium"
-
-[features]
-hooks = true
