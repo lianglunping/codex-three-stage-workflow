@@ -1,6 +1,6 @@
 ---
 name: three-stage-complex-workflow
-description: "Requested three-stage tasks: compare three detailed alternatives, refine the selected plan, then execute with MANUAL approvals or explicit BOUNDED_AUTO authority."
+description: "Investigate, design, execute and verify scoped work when requested or selected under an explicit local intake policy."
 ---
 
 # Three-Stage Complex Workflow
@@ -9,6 +9,17 @@ Use three decision boundaries to deliver an authorized result. Give the user
 three detailed, meaningfully different alternatives before selecting a plan.
 This skill governs task identity, scope, approval and completion; it does not
 require a fixed implementation recipe. Stage leads follow the model defaults below.
+
+## Local intake and delivery policy
+
+When the active global instructions explicitly select a local workflow policy,
+read it before applying this guide. Its task routing, investigation and user
+confirmation points, depth of option comparison, and figure or analysis delivery
+rules govern those decisions, including where the stage-deliverables reference
+describes different defaults. Treat explicit confirmations in the conversation
+as evidence only for the scope the user actually reviewed. Preserve the existing
+rules for safety, model routing, delegation, state integrity and external actions.
+In the absence of an explicit local policy, follow the defaults below.
 
 ## Activate only for the intended task
 
