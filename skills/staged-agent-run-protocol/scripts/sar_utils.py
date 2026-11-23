@@ -24,6 +24,9 @@ def runtime_policy_path(explicit: Optional[str] = None) -> Path:
     """Resolve explicit, installed, then repository policy locations."""
     if explicit:
         return Path(explicit).expanduser()
+    native = Path(__file__).resolve().parents[2] / "three-stage-complex-workflow" / "policies" / POLICY_NAME
+    if native.is_file():
+        return native
     configured = os.environ.get("CODEX_HOME")
     codex_home = Path(configured).expanduser() if configured else Path.home() / ".codex"
     installed = codex_home / "policies" / POLICY_NAME

@@ -19,6 +19,9 @@ SKILLS = (
     "staged-agent-run-protocol",
     "dispatching-parallel-agents",
     "project-audit",
+    "academic-figure-skill",
+    "bio-publication-figure-director",
+    "bio-reporting-figure-export",
 )
 RUNTIME_FILES = (
     ("runtime/policies/three-stage-runtime-v1.json", "policies/three-stage-runtime-v1.json"),
@@ -31,19 +34,23 @@ RUNTIME_FILES = (
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument(
+    targets = parser.add_mutually_exclusive_group()
+    targets.add_argument(
         "--codex-home",
         type=Path,
         default=Path(os.environ.get("CODEX_HOME", Path.home() / ".codex")),
     )
+    targets.add_argument("--dsh-home", type=Path, help="install the DeepSeek Harness bundle here")
     parser.add_argument("--apply", action="store_true", help="perform writes")
     return parser.parse_args()
 
 
-def source_manifest() -> List[Tuple[Path, Path]]:
+def source_manifest(deepseek: bool = False) -> List[Tuple[Path, Path]]:
     manifest: List[Tuple[Path, Path]] = []
     for skill in SKILLS:
         source_root = REPO_ROOT / "skills" / skill
+        if deepseek and skill == "three-stage-complex-workflow":
+            source_root = REPO_ROOT / "hosts" / "deepseek" / "skills" / skill
         if source_root.is_dir():
             for source in sorted(source_root.rglob("*")):
                 if source.is_file() and "__pycache__" not in source.parts:
@@ -52,7 +59,14 @@ def source_manifest() -> List[Tuple[Path, Path]]:
                     )
         else:
             manifest.append((source_root, Path("skills") / skill))
-    manifest.extend((REPO_ROOT / source, Path(target)) for source, target in RUNTIME_FILES)
+    for name in ("WORKFLOW.md", "RESOURCE_INDEX.md"):
+        relative = Path("research-workflow") / name
+        manifest.append((REPO_ROOT / relative, relative))
+    if deepseek:
+        source = REPO_ROOT / "hosts/deepseek/examples/research-routing.yml"
+        manifest.append((source, Path("research-workflow/research-routing.yml")))
+    else:
+        manifest.extend((REPO_ROOT / source, Path(target)) for source, target in RUNTIME_FILES)
     return manifest
 
 
@@ -77,11 +91,12 @@ def atomic_copy(source: Path, target: Path) -> None:
 
 def main() -> int:
     args = parse_args()
-    codex_home = args.codex_home.expanduser().resolve()
-    if codex_home == Path(codex_home.anchor) or codex_home == Path.home().resolve():
+    deepseek = args.dsh_home is not None
+    target_home = (args.dsh_home if deepseek else args.codex_home).expanduser().resolve()
+    if target_home == Path(target_home.anchor) or target_home == Path.home().resolve():
         print("UNSAFE_CODEX_HOME", file=sys.stderr)
         return 2
-    manifest = source_manifest()
+    manifest = source_manifest(deepseek)
     missing = validate_sources(manifest)
     if missing:
         for path in missing:
@@ -89,20 +104,25 @@ def main() -> int:
         return 2
 
     mode = "APPLY" if args.apply else "DRY_RUN"
-    print(f"{mode} codex_home={codex_home}")
+    print(f"{mode} target_home={target_home}")
     for _, relative in manifest:
         print(f"{mode} {relative}")
-    print(f"MANUAL_MERGE {REPO_ROOT / 'examples' / 'config.toml'}")
-    print(f"MANUAL_MERGE {REPO_ROOT / 'examples' / 'AGENTS.md'}")
+    examples = REPO_ROOT / "examples"
+    if deepseek:
+        examples = REPO_ROOT / "hosts" / "deepseek" / "examples"
+        print(f"RESEARCH_ROUTING {target_home / 'research-workflow/research-routing.yml'}")
+    else:
+        print(f"MANUAL_MERGE {examples / 'config.toml'}")
+    print(f"MANUAL_MERGE {examples / 'AGENTS.md'}")
     if not args.apply:
         return 0
 
     timestamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%S.%fZ")
-    backup_root = codex_home / "backups" / "codex-three-stage-workflow" / timestamp
+    backup_root = target_home / "backups" / "codex-three-stage-workflow" / timestamp
     existing = [
-        (codex_home / relative, backup_root / relative)
+        (target_home / relative, backup_root / relative)
         for _, relative in manifest
-        if (codex_home / relative).exists()
+        if (target_home / relative).exists()
     ]
     for target, backup in existing:
         if target.is_symlink():
@@ -110,7 +130,7 @@ def main() -> int:
             return 3
         atomic_copy(target, backup)
     for source, relative in manifest:
-        target = codex_home / relative
+        target = target_home / relative
         if target.is_symlink():
             print(f"UNSAFE_TARGET_SYMLINK {target}", file=sys.stderr)
             return 3

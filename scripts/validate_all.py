@@ -46,6 +46,14 @@ def main() -> int:
         results.append(run("installed-bundle", [python, "-B",
             str(home / "skills/three-stage-complex-workflow/scripts/validate_bundle.py"),
             "--codex-home", str(home), "--agents-skills-root", str(home / "skills")]))
+        dsh = Path(temporary) / "dsh-home"
+        if not run("isolated-deepseek-install", [python, "-B", "scripts/install.py",
+                                                 "--dsh-home", str(dsh), "--apply"]):
+            return 1
+        shutil.copy2(ROOT / "hosts/deepseek/examples/AGENTS.md", dsh / "AGENTS.md")
+        results.append(run("installed-deepseek-bundle", [python, "-B",
+            str(dsh / "skills/three-stage-complex-workflow/scripts/validate_bundle.py"),
+            "--dsh-home", str(dsh), "--skills-root", str(dsh / "skills")]))
         return 0 if all(results) else 1
 
 

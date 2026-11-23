@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import argparse
 import csv
+from fixture_cases import load_cases
 import json
 import os
 import pathlib
@@ -189,7 +190,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--state-cases",
         type=pathlib.Path,
-        help="State-integrity cases (defaults to <skill-root>/references/state_integrity_cases.tsv)",
+        help="State-integrity cases (defaults to <skill-root>/references/state_integrity_cases.json)",
     )
     parser.add_argument(
         "--policy",
@@ -641,12 +642,10 @@ def validate_cases(path: pathlib.Path, model_roles: Dict[str, List[str]]) -> Tup
     if not path.is_file():
         return failures, [f"missing cases file: {path}"], 0
     try:
-        with path.open("r", encoding="utf-8", newline="") as handle:
-            reader = csv.DictReader(handle, delimiter="\t")
-            if reader.fieldnames != REQUIRED_COLUMNS:
-                return failures, [f"unexpected case columns: {reader.fieldnames}"], 0
-            rows = list(reader)
-    except (OSError, UnicodeError, csv.Error) as exc:
+        columns, rows = load_cases(path)
+        if columns != REQUIRED_COLUMNS:
+            return failures, [f"unexpected case columns: {columns}"], 0
+    except (OSError, UnicodeError, ValueError, csv.Error) as exc:
         return failures, [f"cannot parse cases file {path}: {exc}"], 0
 
     if len(rows) < 12:
@@ -694,12 +693,10 @@ def validate_state_cases(path: pathlib.Path) -> Tuple[List[str], List[str], int]
     if not path.is_file():
         return failures, [f"missing state cases file: {path}"], 0
     try:
-        with path.open("r", encoding="utf-8", newline="") as handle:
-            reader = csv.DictReader(handle, delimiter="\t")
-            if reader.fieldnames != STATE_CASE_COLUMNS:
-                return failures, [f"unexpected state case columns: {reader.fieldnames}"], 0
-            rows = list(reader)
-    except (OSError, UnicodeError, csv.Error) as exc:
+        columns, rows = load_cases(path)
+        if columns != STATE_CASE_COLUMNS:
+            return failures, [f"unexpected state case columns: {columns}"], 0
+    except (OSError, UnicodeError, ValueError, csv.Error) as exc:
         return failures, [f"cannot parse state cases file {path}: {exc}"], 0
     if len(rows) < 12:
         failures.append(f"expected at least 12 state cases, found {len(rows)}")
@@ -745,7 +742,7 @@ def main() -> int:
     failures.extend(case_failures)
     input_failures.extend(case_input_failures)
     state_cases_path = args.state_cases or (
-        args.skill_root / "references" / "state_integrity_cases.tsv"
+        args.skill_root / "references" / "state_integrity_cases.json"
     )
     state_failures, state_input_failures, state_case_count = validate_state_cases(
         state_cases_path

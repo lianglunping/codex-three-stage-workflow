@@ -83,6 +83,23 @@ class InstallerTests(unittest.TestCase):
             self.assertFalse((home / "config.toml").exists())
             self.assertFalse((home / "hooks.json").exists())
 
+    def test_deepseek_installs_native_policy_shared_figures_and_profile_overlay(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            target = Path(temporary) / "harness"
+            result = run_installer("--dsh-home", str(target), "--apply")
+            self.assertEqual(result.returncode, 0, result.stderr)
+            native = Path("skills/three-stage-complex-workflow/policies/three-stage-runtime-v1.json")
+            self.assertEqual((target / native).read_bytes(),
+                             (ROOT / "hosts/deepseek" / native).read_bytes())
+            self.assertEqual((target / "research-workflow/research-routing.yml").read_bytes(),
+                             (ROOT / "hosts/deepseek/examples/research-routing.yml").read_bytes())
+            for skill in ("academic-figure-skill", "bio-publication-figure-director",
+                          "bio-reporting-figure-export"):
+                relative = Path("skills") / skill / "SKILL.md"
+                self.assertEqual((target / relative).read_bytes(), (ROOT / relative).read_bytes())
+            self.assertFalse((target / "agents/three_stage_analyzer.toml").exists())
+            self.assertFalse((target / "AGENTS.md").exists())
+
     def test_apply_preserves_every_installed_source_hash(self):
         with tempfile.TemporaryDirectory() as tmp:
             home = Path(tmp) / "codex-home"

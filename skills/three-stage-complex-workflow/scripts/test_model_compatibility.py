@@ -14,7 +14,7 @@ from validate_parallel_coordination_contract import resolve
 from sar_utils import validate_model_for_role
 
 POLICY = json.loads((Path(os.environ.get('CODEX_HOME', Path.home()/'.codex'))/'policies/three-stage-runtime-v1.json').read_text())['model_roles']
-CASES = list(csv.DictReader((ROOT/'references/regression_cases.tsv').open(), delimiter='\t'))
+CASES = json.loads((ROOT / 'references/regression_cases.json').read_text(encoding='utf-8'))
 CORE_MODELS = ('gpt-6.1-sol', 'gpt-5.6-sol', 'gpt-6-astra')
 
 

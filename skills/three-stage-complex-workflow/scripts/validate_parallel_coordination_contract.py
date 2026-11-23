@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import argparse
 import csv
+from fixture_cases import load_cases
 import json
 import os
 import pathlib
@@ -231,14 +232,11 @@ def main() -> int:
         inputs.append(f"missing cases: {args.cases}")
     else:
         try:
-            with args.cases.open(encoding="utf-8", newline="") as handle:
-                reader = csv.DictReader(handle, delimiter="\t")
-                if reader.fieldnames != COLUMNS:
-                    inputs.append(f"unexpected case columns: {reader.fieldnames}")
-                    rows = []
-                else:
-                    rows = list(reader)
-        except (OSError, UnicodeError, csv.Error) as exc:
+            columns, rows = load_cases(args.cases)
+            if columns != COLUMNS:
+                inputs.append(f"unexpected case columns: {columns}")
+                rows = []
+        except (OSError, UnicodeError, ValueError, csv.Error) as exc:
             inputs.append(f"cannot parse cases: {exc}")
             rows = []
         count = len(rows)

@@ -1,0 +1,73 @@
+{
+  "version": "2.1.0-dsh.1",
+  "activation": "explicit_skill_natural_autonomy_or_active_run",
+  "autonomy_modes": {
+    "MANUAL": "explicit_each_gate",
+    "BOUNDED_AUTO": "automatic_within_authority_envelope"
+  },
+  "stop_conditions": [
+    "DESTRUCTIVE_OR_IRREVERSIBLE",
+    "OUTSIDE_AUTHORITY_ENVELOPE",
+    "EXTERNAL_SIDE_EFFECT",
+    "GLOBAL_ENVIRONMENT_CHANGE",
+    "CREDENTIAL_OR_SECURITY_BOUNDARY",
+    "SCIENTIFIC_EVIDENCE_CONFLICT",
+    "ACCEPTANCE_CANNOT_BE_VERIFIED",
+    "MODEL_ROLE_UNAVAILABLE",
+    "REPEATED_FAILURE",
+    "RESOURCE_BUDGET_EXHAUSTED"
+  ],
+  "model_roles": {
+    "deepseek-flash": [
+      "READ_ONLY_REVIEWER",
+      "STAGING_WRITER",
+      "CANONICAL_INTEGRATOR"
+    ],
+    "deepseek-v4-pro": [
+      "READ_ONLY_REVIEWER",
+      "AUDITOR",
+      "STAGING_WRITER",
+      "CANONICAL_INTEGRATOR"
+    ],
+    "deepseek-v4-flash": [
+      "READ_ONLY_REVIEWER",
+      "AUDITOR"
+    ]
+  },
+  "invariants": [
+    "The policy is active only after an explicit skill invocation, a task-bound natural-language bounded-autonomy request, or for a verifiably active matching run.",
+    "Explicit opt-out and meta intent take precedence over token matches.",
+    "Analyze and Refine are read-only planning stages and do not grant implementation authority.",
+    "Analyze cannot transition directly to Execute; Refine selection and mode-specific execution evidence must be recorded first.",
+    "Persisted Execute state requires matching approval and current scope fingerprints; BOUNDED_AUTO also requires ready acceptance gates and a current transition receipt.",
+    "A stale BOUNDED_AUTO transition receipt is regenerated internally in Refine when fingerprints match, gates are ready, and no hard stop exists; it is not a user-supplied approval artifact.",
+    "Core stage and authority rules remain in SKILL.md; low-frequency composition, validation, and persistence details are loaded only from directly linked references.",
+    "Manual Execute requires explicit approval evidence; BOUNDED_AUTO Execute requires the recorded invocation, authority envelope, structured acceptance gates, repair budget, and matching scope fingerprint.",
+    "Automatic stage progression grants no authority outside the recorded envelope and grants no subagent, plugin, credential, external-side-effect, destructive, or global-environment permission.",
+    "New runs use renewable repair cycles: after three repairs for one issue or six in a cycle, review the failure and renew within unchanged authority using recorded diagnosis, next approach and progress or new evidence. Preserve lifetime totals and all failed attempts; renewal has no fixed count ceiling and cannot override hard stops, actual resource limits, or a smaller user-set fixed budget. Legacy records without an explicit repair mode retain their fixed limits.",
+    "The root agent is the sole canonical integrator and at most one writer may be active.",
+    "Staging writers may write only inside their assigned staging directories.",
+    "Audit receipts bind revision_id, manifest_sha256, scope_fingerprint, and audit_cutoff.",
+    "A registered model is only role-compatible; its current assignment, task stage, scope and recorded authority must independently permit every action. Prefer the current compatible model and do not switch models at stage boundaries. Root coordination is distinct from the actual stage lead; delegation requires separate authority and tool availability.",
+    "Keep one authoritative task record; do not duplicate plans or receipts solely to satisfy templates.",
+    "Current runtime model identity must be supplied explicitly; absence cannot select the first compatible policy entry.",
+    "Persisted JSON state is checked against the actual AcceptanceGate and AutoTransitionReceipt schemas; legacy TSV summaries do not establish real-run readiness.",
+    "Reuse evidence only when the relevant inputs, files, environment and assumptions remain applicable; rerun affected checks after changes.",
+    "Planning depth and local methods remain adaptive inside stage, task scope, authority and observable acceptance constraints.",
+    "Stage-lead routing markers are optional for this runtime; when absent, the current model remains the stage lead and requires only role compatibility. Unavailable or unauthorized routes pause without silent fallback.",
+    "Subagent model IDs are unrestricted when current runtime evidence and an independent task capability assessment support the assignment; static model_roles are legacy compatibility, never a dynamic child-model allowlist."
+  ],
+  "limitations": "This policy governs explicit, natural-language bounded-autonomous, or active three-stage runs only. BOUNDED_AUTO replaces repeated stage confirmations only inside a task-scoped authority envelope; it does not restrict ordinary tasks, broaden filesystem authority, enable plugins or subagents, expose credentials, permit external side effects, or override higher-priority instructions.",
+  "stage_model_defaults": {
+    "ANALYZE": "deepseek-v4-pro",
+    "REFINE": "deepseek-v4-pro",
+    "EXECUTE": "deepseek-v4-pro"
+  },
+  "subagent_selection": {
+    "mode": "runtime_evidence",
+    "fixed_model_allowlist": false,
+    "availability_source": "current_runtime",
+    "role_source": "independent_task_capability_assessment",
+    "delegation_requires_explicit_authority": true
+  }
+}

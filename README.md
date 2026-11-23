@@ -1,10 +1,19 @@
-# Codex Three-Stage Workflow
+# Three-Stage Research Workflow for Codex and DeepSeek Harness
 
 Analyze → Refine → Execute with explicit approvals or task-scoped bounded
 autonomy, evidence-based model routing, and verifiable acceptance gates.
 
 [中文说明](docs/README.zh-CN.md) · [Installation](docs/installation.md) ·
 [Architecture](docs/architecture.md) · [Security boundary](docs/security-boundary.md)
+
+## Integrated research workflow
+
+Install seven skills for Codex or DeepSeek Harness and merge the corresponding
+AGENTS example to enable research intake in new chats. Simple figure edits wait
+for one confirmation and route through the figure entry and director. Version
+mergers require an inventory, a reviewed candidate and explicit final approval.
+The chosen research policy governs how many alternatives merit comparison.
+The stage and model defaults below describe the standalone Codex runtime.
 
 ## Workflow
 
@@ -38,6 +47,7 @@ unauthorized handoffs pause without silently substituting another model.
   compare-and-swap integration, stable revision seals and audit receipts.
 - `dispatching-parallel-agents`: separately authorized assignments and write isolation.
 - `project-audit`: evidence-based audit of sealed revisions.
+- `academic-figure-skill` → `bio-publication-figure-director` → `bio-reporting-figure-export` for scientific plots, local revisions and artifact review.
 - Portable runtime policy, optional read-only custom agent templates, dry-run
   installer, public-boundary auditor and isolated validation suite.
 
@@ -63,13 +73,15 @@ python3 scripts/install.py --codex-home "${CODEX_HOME:-$HOME/.codex}" --apply
 ```
 
 The installer never edits `AGENTS.md`, `config.toml` or `hooks.json`.
-Manually merge the generic examples where appropriate. Validation installs into
+Merge the matching host example to enable daily routing. For DeepSeek Harness use
+`python3 scripts/install.py --dsh-home "$HOME/.dsh" --apply`, then merge
+`hosts/deepseek/examples/AGENTS.md`. Pair it with the [Harness routing example](hosts/deepseek/examples/research-routing.yml) as described in the installation guide. Validation installs into
 a disposable Codex home and uses synthetic fixtures, without reading personal
 task records or configuration.
 
 ## Upgrade and compatibility
 
-Public package **0.2.0** carries workflow policy **2.1.0**; these version numbers
+Public package **0.3.0** carries workflow policy **2.1.0**; these version numbers
 identify different components. See [the changelog](CHANGELOG.md).
 
 The former Sol/Terra-only strict hook is retired because it cannot represent the

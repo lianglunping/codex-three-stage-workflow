@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.3.0
+
+- Package shared research intake, candidate review, final approval and the three
+  scientific figure skills alongside the existing four workflow skills.
+- Add a DeepSeek Harness installation target with its native stage policy.
+- Store synthetic validator cases as JSON and continue accepting TSV inputs.
+
+
 All notable changes to this project are documented here.
 
 ## [0.2.0] - 2026-11-05

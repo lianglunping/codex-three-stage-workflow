@@ -23,7 +23,7 @@ WORKFLOW_VALIDATOR = (
     / "validate_workflow_contract.py"
 )
 WORKFLOW_SKILL = ROOT / "skills" / "three-stage-complex-workflow"
-WORKFLOW_CASES = WORKFLOW_SKILL / "references" / "regression_cases.tsv"
+WORKFLOW_CASES = WORKFLOW_SKILL / "references" / "regression_cases.json"
 EXAMPLE_AGENTS = ROOT / "examples" / "AGENTS.md"
 
 
@@ -109,8 +109,7 @@ class WorkflowRoutingContractTests(unittest.TestCase):
                     target.write_text(original, encoding="utf-8")
 
     def test_invalid_active_run_enumerations_are_input_errors(self):
-        with WORKFLOW_CASES.open(encoding="utf-8") as handle:
-            cases = list(csv.DictReader(handle, delimiter="\t"))
+        cases = json.loads(WORKFLOW_CASES.read_text(encoding="utf-8"))
         with tempfile.TemporaryDirectory() as tmp:
             for field, invalid in (("prior_stage", "BOGUS"), ("run_status", "active")):
                 with self.subTest(field=field):
